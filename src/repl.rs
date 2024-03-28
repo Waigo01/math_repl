@@ -144,7 +144,7 @@ impl<T: Any + Clone, F: FnMut(String, &mut T) -> Result<Action, HandlerError>> R
                 Err(s) => {  
                     let output_line_split = s.message.split("\n").map(|x| x.to_string()).collect::<Vec<String>>();
                     for i in output_line_split {
-                        self.term.write_line(&format!("{}{}", self.output_prefix, style(i).red()))?;
+                        self.term.write_line(&format!("{}{}", self.output_prefix, style(i).red().bold()))?;
                     }
                 }
             }
