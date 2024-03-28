@@ -86,6 +86,8 @@ fn solve_eq(msg: String, global_state: &mut (Vec<Variable>, Vec<StepType>)) -> R
 
     if roots.len() == 0 {
         output_string = "No solutions found!".to_string();
+    } else if roots.len() == 1 {
+        output_string = roots[0].pretty_print(Some("x".to_string()));
     } else {
         output_string = roots.iter().enumerate().map(|(i, x)| x.pretty_print(Some(format!("x_{}", i)))).collect::<Vec<String>>().join("\n");
     }
@@ -126,6 +128,8 @@ fn save_solved_eq(msg: String, var: String, global_state: &mut (Vec<Variable>, V
 
     if roots.len() == 0 {
         output_string = "No solutions found!".to_string();
+    } else if roots.len() == 1 {
+        output_string = roots[0].pretty_print(Some(var.clone()));
     } else {
         output_string = roots.iter().enumerate().map(|(i, x)| x.pretty_print(Some(format!("{}_{}", var, i)))).collect::<Vec<String>>().join("\n");
     }
@@ -152,13 +156,23 @@ pub fn handle_message(msg: String, global_state: &mut (Vec<Variable>, Vec<StepTy
         return Ok(Action::Print(output_buffer));
     }
     if msg.len() == 5 && msg[0..=4].to_string().to_uppercase() == "CLEAR" {
+        global_state.0 = vec![
+            Variable {
+                name: "pi".to_string(),
+                value: Value::Scalar(std::f64::consts::PI)
+            },
+            Variable {
+                name: "e".to_string(),
+                value: Value::Scalar(std::f64::consts::E)
+            }
+        ];
         return Ok(Action::Exec(Exec::Clear));
     }
     if msg.len() == 4 && msg[0..=3].to_string().to_uppercase() == "EXIT" {
         return Ok(Action::Exec(Exec::Exit))
     }
     if msg.len() == 4 && msg[0..=3].to_string().to_uppercase() == "HELP" {
-        return Err(HandlerError{ message: "Usage:\n\tYou can do 4 types of things:\n\t\tCalculate something (anything you want): <expr>\n\t\tSave something (anything you want) to a variable: <varName> = <expr>\n\t\tSolve an equation (using x as variable to find): eq <expr> = <expr>\n\t\tSolve an equation and save it into a variable (using <varName> as variable to find): <varName> = eq <expr> = <expr>\n\tAs an <expr> counts:\n\t\tA scalar (number): <number>\n\t\tA vector: [<1>, <2>, ..., <n>]\n\t\tA matrix: [[<1:1>, <1:2>, ..., <1:n>], [<2:1>, <2:2>, ..., <2:n>], ..., [<n:1>, <n:2>, ..., <n:n>]]\n\t\tYou can also use all common operations between all different types (It will tell you, when it can't calculate something).\n\tAdditional commands:\n\t\tclear: Clears the screen/chat, the history for LaTeX export and all vars except pi and e.\n\t\tclearvars: Clears all vars except pi and e.\n\t\tvars: Displays all vars.\n\t\texport (< --tex | --png >): Exports history since last clear in specified format (leave blank for .pdf).\n\t\thelp: This help page.\n\t\texit(only in CLI): Exits the REPL.\n\tSome rules:\n\t\tVariablenames must start with an alphabetical letter or a \\. (Greek symbols in LaTeX style get replaced before printing). Numbers are only allowed in subscript.\n\t\tAny other rules will be explained to you in a (not so) nice manner by the program.".to_string()});
+        return Err(HandlerError{ message: "Usage:\n\tYou can do 4 types of things:\n\t\tCalculate something (anything you want): <expr>\n\t\tSave something (anything you want) to a variable: <varName> = <expr>\n\t\tSolve an equation (using x as variable to find): eq <expr> = <expr>\n\t\tSolve an equation and save it into a variable (using <varName> as variable to find): <varName> = eq <expr> = <expr>\n\tAs an <expr> counts:\n\t\tA scalar (number): <number>\n\t\tA vector: [<1>, <2>, ..., <n>]\n\t\tA matrix: [[<1:1>, <1:2>, ..., <1:n>], [<2:1>, <2:2>, ..., <2:n>], ..., [<n:1>, <n:2>, ..., <n:n>]]\n\t\tYou can also use all common operations between all different types (It will tell you, when it can't calculate something).\n\tAdditional commands:\n\t\tclear: Clears the screen/chat, the history for LaTeX export and all vars except pi and e.\n\t\tclearvars: Clears all vars except pi and e.\n\t\tvars: Displays all vars.\n\t\texport (< --tex | --png >): Exports history since last clear in specified format (leave blank for .pdf).\n\t\thelp: This help page.\n\t\texit: Exits the REPL.\n\tSome rules:\n\t\tVariablenames must start with an alphabetical letter or a \\. (Greek symbols in LaTeX style get replaced before printing). Numbers are only allowed in subscript.\n\t\tAny other rules will be explained to you in a (not so) nice manner by the program.".to_string()});
     }
     if msg.split(" ").nth(0).unwrap().len() == 6 && msg[0..=5].to_string().to_uppercase() == "EXPORT" {
         match msg.to_lowercase().as_str() {
@@ -178,7 +192,7 @@ pub fn handle_message(msg: String, global_state: &mut (Vec<Variable>, Vec<StepTy
         }
     }
     if msg.len() == 9 && msg[0..=8].to_string().to_uppercase() == "CLEARVARS" {
-        (global_state).0 = vec![
+        global_state.0 = vec![
             Variable {
                 name: "pi".to_string(),
                 value: Value::Scalar(std::f64::consts::PI)
