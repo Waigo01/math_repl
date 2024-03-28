@@ -4,7 +4,7 @@ math_repl is a cli repl that allows a user to quickly calculate expressions, sav
 
 math_repl does not only support numbers but also vectors and matrices.
 
-:warning: math_repl is built on top of [math_util_lib](https://crates.io/crates/math_utils_lib), which has not yet reached 1.0.0. Expect breaking changes.
+:warning: math_repl is built on top of [math_utils_lib](https://crates.io/crates/math_utils_lib), which has not yet reached 1.0.0. Expect breaking changes.
 
 ## Installation
 

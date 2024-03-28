@@ -11,4 +11,5 @@ categories = ["mathematics", "command-line-utilities"]
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
+console = "0.15.8"
 math_utils_lib = "0.1.3"
