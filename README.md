@@ -4,6 +4,8 @@ math_repl is a cli repl that allows a user to quickly calculate expressions, sav
 
 math_repl does not only support numbers but also vectors and matrices.
 
+:warning: math_repl is built on top of (math_util_lib)[https://crates.io/crates/math_utils_lib], which has not yet reached 1.0.0. Expect breaking changes.
+
 ## Installation
 
 You can install math_repl from crates.io.
@@ -19,7 +21,7 @@ Here is some usage information from the internal help command:
 
 ```
 Usage:
-    You can do 4 types of things:
+    You can do 4 basic operations:
         Calculate something (anything you want): <expr>
         Save something (anything you want) to a variable: <varName> = <expr>
         Solve an equation (using x as variable to find): eq <expr> = <expr>
@@ -29,7 +31,7 @@ Usage:
         A vector: [<1>, <2>, ..., <n>]
         A matrix: [[<1:1>, <1:2>, ..., <1:n>], [<2:1>, <2:2>, ..., <2:n>], ..., [<n:1>, <n:2>, ..., <n:n>]]
         A Variable: Any previously defined variable.
-        You can also use all common operations between all different types (It will tell you, when it can't calculate something).
+        You can also use all common operations (see ) between all different types (It will tell you, when it can't calculate something).
     Additional commands:
         clear: Clears the screen/chat, the history for LaTeX export and all vars except pi and e.
         clearvars: Clears all vars except pi and e.
@@ -38,6 +40,6 @@ Usage:
         help: This help page.
         exit: Exits the REPL.
     Some rules:
-        Variable Names must start with an alphabetical letter or a \. (Greek symbols in LaTeX style get replaced before printing). Numbers are only allowed in subscript.
+        Variable Names must start with an alphabetical letter or a \. (Greek symbols in LaTeX style get replaced before printing). Numbers are only allowed in LaTeX style subscript.
         Any other rules will be explained to you in a (not so) nice manner by the program.
 ```
