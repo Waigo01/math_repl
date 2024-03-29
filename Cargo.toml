@@ -12,4 +12,4 @@ categories = ["mathematics", "command-line-utilities"]
 
 [dependencies]
 console = "0.15.8"
-math_utils_lib = "0.1.5"
+math_utils_lib = "0.1.6"
