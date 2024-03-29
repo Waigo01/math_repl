@@ -1,5 +1,7 @@
 ![math_repl banner](./images/banner.png)
 
+[![crates.io](https://img.shields.io/badge/crates.io-orange?style=for-the-badge&logo=rust)](https://crates.io/crates/math_repl)
+
 math_repl is a CLI REPL that allows a user to quickly calculate expressions, save the results in variables and use those variables in another expression or equation. It additionally allows a user to solve equations, save its results in variables and use them anywhere. All steps that are taken are recorded and can be exported to LaTeX (see Usage below).
 
 math_repl does not only support numbers but also vectors and matrices.
