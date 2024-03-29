@@ -21,4 +21,4 @@ features = ["doc-images"]
 [dependencies]
 console = "0.15.8"
 embed-doc-image = "0.1.4"
-math_utils_lib = "0.1.7"
+math_utils_lib = "0.1.8"

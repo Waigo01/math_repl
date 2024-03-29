@@ -8,7 +8,7 @@ math_repl does not only support numbers but also vectors and matrices.
 
 ## Showcase
 
-![A Gif Showcase of the REPL](./images/output.gif)
+![A Gif Showcase of the REPL](./images/showcase.gif)
 
 ## Installation
 

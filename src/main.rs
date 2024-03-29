@@ -1,7 +1,7 @@
 #![cfg_attr(feature = "doc-images",
 cfg_attr(all(),
 doc = ::embed_doc_image::embed_image!("banner", "images/banner.png"),
-doc = ::embed_doc_image::embed_image!("showcase", "images/output.gif")))]
+doc = ::embed_doc_image::embed_image!("showcase", "images/showcase.gif")))]
 #![cfg_attr(
 not(feature = "doc-images"),
 doc = "**Doc images not enabled**. Compile with feature `doc-images` and Rust version >= 1.54 \
