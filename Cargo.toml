@@ -2,6 +2,7 @@
 name = "math_repl"
 version = "0.1.0"
 edition = "2021"
+description = "Simple REPL for all different kinds of math."
 license-file = "LICENSE.txt"
 repository = "https://github.com/Waigo01/math_repl"
 readme = "README.md"
