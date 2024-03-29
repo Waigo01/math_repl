@@ -175,6 +175,7 @@ const HELP_MESSAGE: &str = "You can do 4 basic operations:
         Numbers in Variable Names are only allowed in LaTeX style subscript.
         Any other rules will be explained to you in a (not so) nice manner by the program."; 
 
+/// describes the main message handler for math_repl.
 pub fn handle_message(msg: String, global_state: &mut (Vec<Variable>, Vec<StepType>)) -> Result<Action, HandlerError> {
     if msg.len() == 4 && msg[0..=3].to_string().to_uppercase() == "VARS" {
         let output_buffer = global_state.0.iter().map(|x| x.value.pretty_print(Some(x.name.clone()))).collect::<Vec<String>>().join("\n"); 

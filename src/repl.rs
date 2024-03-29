@@ -2,20 +2,53 @@ use std::{any::Any, error::Error, io::Write};
 
 use console::{style, Key, Term};
 
+/// describes internal commands for [Repl] to execute.
 pub enum Exec {
     Exit,
     Clear
 }
 
+/// describes the type of action that should be taken by [Repl].
 pub enum Action {
     Print(String),
     Exec(Exec)
 }
 
+/// describes a simple HandlerError type.
 pub struct HandlerError {
     pub message: String
 }
 
+/// describes the REPL
+///
+/// A REPL can be initialized using the [new()](fn@Repl::new()) method. This method requires an input_prefix, which
+/// is printed before any input is taken, an output_prefix, which is printed before any output is printed,
+/// an initial_state, which is described by the Generic T and a handler, which is a function of type
+/// ```FnMut(String, &mut T) -> Result<Action, HandlerError>```.
+///
+/// After the initialization a REPL can be run using the [run_repl()](fn@Repl::run_repl()) method.
+///
+/// # Example
+///
+/// ```
+/// let initial_state: Vec<String> = vec![];
+///
+/// fn message_handler(input: String, global_state: &mut Vec<String>) -> Result<Action, HandlerError> {
+///     if global_state.len() > 3 {
+///         return Ok(Action::Exec(Exec::Exit));
+///     } else {
+///         global_state.push("Hello World".to_string());
+///         return Ok(Action::Print(format!("{}: {}", global_state[global_state.len()-1], input)));
+///     }
+/// }
+///
+/// let mut repl = Repl::new("> ".to_string(), "| ".to_string(), initial_state, message_handler);
+///
+/// repl.run_repl()?;
+///```
+///
+///This crude message_handler will take four inputs and print back "Hello World: \<input\>". It
+///will exit on the fifth input.
 pub struct Repl<T: Any + Clone, F: FnMut(String, &mut T) -> Result<Action, HandlerError>> {
     term: Term,
     input_prefix: String,
@@ -24,7 +57,8 @@ pub struct Repl<T: Any + Clone, F: FnMut(String, &mut T) -> Result<Action, Handl
     pub global_state: T
 }
 
-impl<T: Any + Clone, F: FnMut(String, &mut T) -> Result<Action, HandlerError>> Repl<T, F> { 
+impl<T: Any + Clone, F: FnMut(String, &mut T) -> Result<Action, HandlerError>> Repl<T, F> {
+    /// used to initialize a new [Repl].
     pub fn new(input_prefix: String, output_prefix: String, initial_state: T, handler: F) -> Repl<T, F> {
         Repl {
             term: Term::stdout(),
@@ -34,6 +68,7 @@ impl<T: Any + Clone, F: FnMut(String, &mut T) -> Result<Action, HandlerError>> R
             global_state: initial_state
         }
     }
+    /// used to run a [Repl].
     pub fn run_repl(&mut self) -> Result<(), Box<dyn Error>> {
         let mut history: Vec<String> = vec![];
         self.term.clear_screen()?;

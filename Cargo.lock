@@ -56,14 +56,15 @@ name = "math_repl"
 version = "0.1.0"
 dependencies = [
  "console",
+ "embed-doc-image",
  "math_utils_lib",
 ]
 
 [[package]]
 name = "math_utils_lib"
-version = "0.1.6"
+version = "0.1.7"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "c3812110b0d7f48bf93f55219c4c868d5462c9618e99d5dc678345711f02c03c"
+checksum = "41bc1027ba8e23ed05a250041bfb3a3a2fadb9842e5b47793bfab18f74c57d03"
 dependencies = [
  "embed-doc-image",
 ]
