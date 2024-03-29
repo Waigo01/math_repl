@@ -6,7 +6,7 @@ description = "Simple REPL for all different kinds of math."
 license-file = "LICENSE.txt"
 repository = "https://github.com/Waigo01/math_repl"
 readme = "README.md"
-keywords = ["math repl", "mathrepl", "repl", "mathcli", "math"]
+keywords = ["math_repl", "mathrepl", "repl", "mathcli", "math"]
 categories = ["mathematics", "command-line-utilities"]
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
