@@ -52,8 +52,8 @@ impl<T: Any + Clone, F: FnMut(String, &mut T) -> Result<Action, HandlerError>> R
                             input_buffer.insert(position as usize, c);
                         }
                         position += 1;
-                        self.term.move_cursor_right(input_buffer.len()-position+1)?;
-                        self.term.clear_chars(input_buffer.len())?;
+                        self.term.move_cursor_right(input_buffer.len()-position)?;
+                        self.term.clear_chars(input_buffer.len()-1)?;
                         self.term.write(input_buffer.as_bytes())?;
                         self.term.move_cursor_left(input_buffer.len()-position)?;
                     },

@@ -150,6 +150,31 @@ fn save_solved_eq(msg: String, var: String, global_state: &mut (Vec<Variable>, V
     return Ok(output_string);
 }
 
+const HELP_MESSAGE: &str = "You can do 4 basic operations:
+        Calculate something: <expr>
+        Save the results of a calculation to a variable: <varName> = <expr>
+        Solve an equation (using x as variable to solve for): eq <expr> = <expr>
+        Solve an equation and save it into a variable (using <varName> as variable to solve for): <varName> = eq <expr> = <expr>
+    As an <expr> counts:
+        A scalar (number): <number>
+        A vector: [<1>, <2>, ..., <n>]
+        A matrix: [[<1:1>, <1:2>, ..., <1:n>], [<2:1>, <2:2>, ..., <2:n>], ..., [<n:1>, <n:2>, ..., <n:n>]]
+        A Variable: Any previously defined variable.
+
+        You can also use all common operations (see https://docs.rs/math_utils_lib/latest/math_utils_lib/parser/enum.OpType.html)
+        between all different types (It will tell you, when it can't calculate something).
+    Additional commands:
+        clear: Clears the screen, the history for LaTeX export and all vars except pi and e.
+        clearvars: Clears all vars except pi and e.
+        vars: Displays all vars.
+        export (< --tex | --png >): Exports history since last clear in specified format (leave blank for .pdf).
+        help: This help page.
+        exit: Exits the REPL.
+    Some rules:
+        Variable Names must start with an alphabetical letter or a \\. (Greek symbols in LaTeX style get replaced before printing).
+        Numbers in Variable Names are only allowed in LaTeX style subscript.
+        Any other rules will be explained to you in a (not so) nice manner by the program."; 
+
 pub fn handle_message(msg: String, global_state: &mut (Vec<Variable>, Vec<StepType>)) -> Result<Action, HandlerError> {
     if msg.len() == 4 && msg[0..=3].to_string().to_uppercase() == "VARS" {
         let output_buffer = global_state.0.iter().map(|x| x.value.pretty_print(Some(x.name.clone()))).collect::<Vec<String>>().join("\n"); 
@@ -173,7 +198,7 @@ pub fn handle_message(msg: String, global_state: &mut (Vec<Variable>, Vec<StepTy
         return Ok(Action::Exec(Exec::Exit))
     }
     if msg.len() == 4 && msg[0..=3].to_string().to_uppercase() == "HELP" {
-        return Ok(Action::Print("Usage:\n\tYou can do 4 basic operations:\n\t\tCalculate something (anything you want): <expr>\n\t\tSave something (anything you want) to a variable: <varName> = <expr>\n\t\tSolve an equation (using x as variable to find): eq <expr> = <expr>\n\t\tSolve an equation and save it into a variable (using <varName> as variable to find): <varName> = eq <expr> = <expr>\n\tAs an <expr> counts:\n\t\tA scalar (number): <number>\n\t\tA vector: [<1>, <2>, ..., <n>]\n\t\tA matrix: [[<1:1>, <1:2>, ..., <1:n>], [<2:1>, <2:2>, ..., <2:n>], ..., [<n:1>, <n:2>, ..., <n:n>]]\n\t\tYou can also use all common operations between all different types (It will tell you, when it can't calculate something).\n\tAdditional commands:\n\t\tclear: Clears the screen/chat, the history for LaTeX export and all vars except pi and e.\n\t\tclearvars: Clears all vars except pi and e.\n\t\tvars: Displays all vars.\n\t\texport (< --tex | --png >): Exports history since last clear in specified format (leave blank for .pdf).\n\t\thelp: This help page.\n\t\texit: Exits the REPL.\n\tSome rules:\n\t\tVariablenames must start with an alphabetical letter or a \\. (Greek symbols in LaTeX style get replaced before printing). Numbers are only allowed in LaTeX style subscript.\n\t\tAny other rules will be explained to you in a (not so) nice manner by the program.".to_string()));
+        return Ok(Action::Print(HELP_MESSAGE.to_string()));
     }
     if msg.split(" ").nth(0).unwrap().len() == 6 && msg[0..=5].to_string().to_uppercase() == "EXPORT" {
         match msg.to_lowercase().as_str() {

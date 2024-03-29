@@ -17,7 +17,7 @@ fn main() {
             value: Value::Scalar(std::f64::consts::E)
         }
     ], vec![]);
-    let mut repl = Repl::new("⎬ ".to_string(), "⎜ ".to_string(), initial_state, handle_message);
+    let mut repl = Repl::new("├ ".to_string(), "│ ".to_string(), initial_state, handle_message);
 
     let _ = repl.run_repl();
 }
