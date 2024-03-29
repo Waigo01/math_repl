@@ -166,6 +166,7 @@ pub fn handle_message(msg: String, global_state: &mut (Vec<Variable>, Vec<StepTy
                 value: Value::Scalar(std::f64::consts::E)
             }
         ];
+        global_state.1.clear();
         return Ok(Action::Exec(Exec::Clear));
     }
     if msg.len() == 4 && msg[0..=3].to_string().to_uppercase() == "EXIT" {
