@@ -1,6 +1,6 @@
 [package]
 name = "math_repl"
-version = "0.1.0"
+version = "0.1.1"
 edition = "2021"
 description = "Simple REPL for all different kinds of math."
 license-file = "LICENSE.txt"
@@ -22,4 +22,4 @@ features = ["doc-images"]
 [dependencies]
 console = "0.15.8"
 embed-doc-image = "0.1.4"
-math_utils_lib = "0.1.8"
+math_utils_lib = { git = "https://github.com/Waigo01/math_utils_lib", branch = "dev" }

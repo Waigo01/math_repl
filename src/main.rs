@@ -71,14 +71,8 @@ pub use crate::repl::Repl;
 
 pub fn main() {
     let initial_state = (vec![ 
-        Variable {
-            name: "pi".to_string(),
-            value: Value::Scalar(std::f64::consts::PI)
-        },
-        Variable {
-            name: "e".to_string(),
-            value: Value::Scalar(std::f64::consts::E)
-        }
+        Variable::new("pi".to_string(), Value::Scalar(std::f64::consts::PI)),
+        Variable::new("e".to_string(), Value::Scalar(std::f64::consts::E)),
     ], vec![]);
     let mut repl = Repl::new("├ ".to_string(), "│ ".to_string(), initial_state, handle_message);
 
