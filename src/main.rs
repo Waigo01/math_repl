@@ -46,8 +46,9 @@ doc = "**Doc images not enabled**. Compile with feature `doc-images` and Rust ve
 //!     A matrix: [[<1:1>, <1:2>, ..., <1:n>], [<2:1>, <2:2>, ..., <2:n>], ..., [<n:1>, <n:2>, ..., <n:n>]]
 //!     A Variable: Any previously defined variable.
 //!
-//!     You can also use all common operations (see https://docs.rs/math_utils_lib/latest/math_utils_lib/parser/enum.OpType.html)
+//!     You can also use all common operations (see https://docs.rs/math_utils_lib/0.2.0/math_utils_lib/parser/enum.SimpleOpType.html)
 //!     between all different types (It will tell you, when it can't calculate something).
+//!     And more advanced operations such as integrals and derivatives (see https://docs.rs/math_utils_lib/0.2.0/math_utils_lib/parser/enum.AdvancedOpType.html)
 //! Additional commands:
 //!     clear: Clears the screen, the history for LaTeX export and all vars except pi and e.
 //!     clearvars: Clears all vars except pi and e.
@@ -71,14 +72,8 @@ pub use crate::repl::Repl;
 
 pub fn main() {
     let initial_state = (vec![ 
-        Variable {
-            name: "pi".to_string(),
-            value: Value::Scalar(std::f64::consts::PI)
-        },
-        Variable {
-            name: "e".to_string(),
-            value: Value::Scalar(std::f64::consts::E)
-        }
+        Variable::new("pi".to_string(), Value::Scalar(std::f64::consts::PI)),
+        Variable::new("e".to_string(), Value::Scalar(std::f64::consts::E)),
     ], vec![]);
     let mut repl = Repl::new("├ ".to_string(), "│ ".to_string(), initial_state, handle_message);
 

@@ -1,4 +1,4 @@
-use math_utils_lib::{eval, export, find_roots, parse, parser::{Binary, OpType, Operation}, ExportType, MathLibError, StepType, Value, Variable};
+use math_utils_lib::{eval, export, find_roots, parse, parser::{Binary, SimpleOpType, Operation}, ExportType, MathLibError, StepType, Value, Variable};
 
 use crate::repl::{Exec, Action, HandlerError};
 
@@ -53,7 +53,7 @@ fn save_calc_expr(msg: String, var: String, global_state: &mut (Vec<Variable>, V
         }
     }
     if !found {
-        global_state.0.push(Variable { name: var.clone(), value: res.clone() });
+        global_state.0.push(Variable::new(var.clone(), res.clone()));
     }
     let output_msg = res.pretty_print(Some(var.clone()));
     global_state.1.push(StepType::Calc((parsed, res, Some(var))));
@@ -74,13 +74,13 @@ fn solve_eq(msg: String, global_state: &mut (Vec<Variable>, Vec<StepType>)) -> R
         right_b = parse(left)?;
     }
 
-    let root_b = Binary::Operation(Box::new(Operation {
-        op_type: OpType::Sub,
+    let root_b = Binary::from_operation(Operation::SimpleOperation {
+        op_type: SimpleOpType::Sub,
         left: left_b.clone(),
         right: right_b.clone()
-    }));
+    });
 
-    let roots = find_roots(root_b, global_state.clone().0, "x")?;
+    let roots = find_roots(root_b, global_state.clone().0, "x".to_string())?;
 
     let output_string;
 
@@ -114,15 +114,15 @@ fn save_solved_eq(msg: String, var: String, global_state: &mut (Vec<Variable>, V
         right_b = parse(left)?;
     }
 
-    let root_b = Binary::Operation(Box::new(Operation {
-        op_type: OpType::Sub,
+    let root_b = Binary::from_operation(Operation::SimpleOperation {
+        op_type: SimpleOpType::Sub,
         left: left_b.clone(),
         right: right_b.clone()
-    }));
+    });
 
     global_state.0 = global_state.0.clone().into_iter().filter(|x| x.name != var).collect();
 
-    let roots = find_roots(root_b, global_state.clone().0, &var)?;
+    let roots = find_roots(root_b, global_state.clone().0, var.clone())?;
 
     let output_string;
 
@@ -135,13 +135,10 @@ fn save_solved_eq(msg: String, var: String, global_state: &mut (Vec<Variable>, V
     }
 
     if roots.len() == 1 {
-        global_state.0.push(Variable { name: var.clone(), value: roots[0].clone() });
+        global_state.0.push(Variable::new(var.clone(), roots[0].clone()));
     } else {
         for i in 0..roots.len() {
-            global_state.0.push(Variable {
-                name: format!("{}_{}", var, i),
-                value: roots[i].clone()
-            })
+            global_state.0.push(Variable::new(format!("{}_{}", var, i), roots[i].clone()));
         }
     }
 
@@ -161,8 +158,9 @@ const HELP_MESSAGE: &str = "You can do 4 basic operations:
         A matrix: [[<1:1>, <1:2>, ..., <1:n>], [<2:1>, <2:2>, ..., <2:n>], ..., [<n:1>, <n:2>, ..., <n:n>]]
         A Variable: Any previously defined variable.
 
-        You can also use all common operations (see https://docs.rs/math_utils_lib/latest/math_utils_lib/parser/enum.OpType.html)
+        You can also use all common operations (see https://docs.rs/math_utils_lib/0.2.0/math_utils_lib/parser/enum.SimpleOpType.html)
         between all different types (It will tell you, when it can't calculate something).
+        And more advanced operations such as integrals and derivatives (see https://docs.rs/math_utils_lib/0.2.0/math_utils_lib/parser/enum.AdvancedOpType.html)
     Additional commands:
         clear: Clears the screen, the history for LaTeX export and all vars except pi and e.
         clearvars: Clears all vars except pi and e.
@@ -183,14 +181,8 @@ pub fn handle_message(msg: String, global_state: &mut (Vec<Variable>, Vec<StepTy
     }
     if msg.len() == 5 && msg[0..=4].to_string().to_uppercase() == "CLEAR" {
         global_state.0 = vec![
-            Variable {
-                name: "pi".to_string(),
-                value: Value::Scalar(std::f64::consts::PI)
-            },
-            Variable {
-                name: "e".to_string(),
-                value: Value::Scalar(std::f64::consts::E)
-            }
+            Variable::new("pi".to_string(), Value::Scalar(std::f64::consts::PI)),
+            Variable::new("e".to_string(), Value::Scalar(std::f64::consts::E))
         ];
         global_state.1.clear();
         return Ok(Action::Exec(Exec::Clear));
@@ -220,14 +212,8 @@ pub fn handle_message(msg: String, global_state: &mut (Vec<Variable>, Vec<StepTy
     }
     if msg.len() == 9 && msg[0..=8].to_string().to_uppercase() == "CLEARVARS" {
         global_state.0 = vec![
-            Variable {
-                name: "pi".to_string(),
-                value: Value::Scalar(std::f64::consts::PI)
-            },
-            Variable {
-                name: "e".to_string(),
-                value: Value::Scalar(std::f64::consts::E)
-            }
+            Variable::new("pi".to_string(), Value::Scalar(std::f64::consts::PI)),
+            Variable::new("e".to_string(), Value::Scalar(std::f64::consts::E))
         ];
         let output_buffer = global_state.0.iter().map(|x| x.value.pretty_print(Some(x.name.clone()))).collect::<Vec<String>>().join("\n"); 
         return Ok(Action::Print(output_buffer));

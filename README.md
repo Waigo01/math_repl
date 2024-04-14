@@ -1,6 +1,7 @@
 ![math_repl banner](./images/banner.png)
 
 [![crates.io](https://img.shields.io/badge/crates.io-orange?style=for-the-badge&logo=rust)](https://crates.io/crates/math_repl)
+[![docs.rs](https://img.shields.io/badge/docs.rs-gray?style=for-the-badge&logo=docs.rs)]()
 
 math_repl is a CLI REPL that allows a user to quickly calculate expressions, save the results in variables and use those variables in another expression or equation. It additionally allows a user to solve equations, save its results in variables and use them anywhere. All steps that are taken are recorded and can be exported to LaTeX (see Usage below).
 
@@ -38,8 +39,9 @@ Usage:
         A matrix: [[<1:1>, <1:2>, ..., <1:n>], [<2:1>, <2:2>, ..., <2:n>], ..., [<n:1>, <n:2>, ..., <n:n>]]
         A Variable: Any previously defined variable.
 
-        You can also use all common operations (see https://docs.rs/math_utils_lib/latest/math_utils_lib/parser/enum.OpType.html)
+        You can also use all common operations (see https://docs.rs/math_utils_lib/0.2.0/math_utils_lib/parser/enum.SimpleOpType.html)
         between all different types (It will tell you, when it can't calculate something).
+        And more advanced operations such as integrals and derivatives (see https://docs.rs/math_utils_lib/0.2.0/math_utils_lib/parser/enum.AdvancedOpType.html)
     Additional commands:
         clear: Clears the screen, the history for LaTeX export and all vars except pi and e.
         clearvars: Clears all vars except pi and e.
