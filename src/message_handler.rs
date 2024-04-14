@@ -158,8 +158,9 @@ const HELP_MESSAGE: &str = "You can do 4 basic operations:
         A matrix: [[<1:1>, <1:2>, ..., <1:n>], [<2:1>, <2:2>, ..., <2:n>], ..., [<n:1>, <n:2>, ..., <n:n>]]
         A Variable: Any previously defined variable.
 
-        You can also use all common operations (see https://docs.rs/math_utils_lib/latest/math_utils_lib/parser/enum.OpType.html)
+        You can also use all common operations (see https://docs.rs/math_utils_lib/0.2.0/math_utils_lib/parser/enum.SimpleOpType.html)
         between all different types (It will tell you, when it can't calculate something).
+        And more advanced operations such as integrals and derivatives (see https://docs.rs/math_utils_lib/0.2.0/math_utils_lib/parser/enum.AdvancedOpType.html)
     Additional commands:
         clear: Clears the screen, the history for LaTeX export and all vars except pi and e.
         clearvars: Clears all vars except pi and e.

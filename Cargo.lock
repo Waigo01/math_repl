@@ -63,7 +63,8 @@ dependencies = [
 [[package]]
 name = "math_utils_lib"
 version = "0.2.0"
-source = "git+https://github.com/Waigo01/math_utils_lib?branch=dev#891f286b71f9f2c78589867f1fe253c0f77fa598"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "5d308ea21138c1fea8ebeccf2c9edf3bf2dd22bb6942b35726eeb4981285dffb"
 dependencies = [
  "embed-doc-image",
 ]

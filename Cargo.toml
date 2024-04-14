@@ -22,4 +22,4 @@ features = ["doc-images"]
 [dependencies]
 console = "0.15.8"
 embed-doc-image = "0.1.4"
-math_utils_lib = { git = "https://github.com/Waigo01/math_utils_lib", branch = "dev" }
+math_utils_lib = "^0.2.0"
