@@ -1,6 +1,7 @@
 use std::{any::Any, error::Error, io::Write};
 
 use console::{style, Key, Term};
+use math_utils_lib::MathLibError;
 
 /// describes internal commands for [Repl] to execute.
 pub enum Exec {
@@ -17,6 +18,12 @@ pub enum Action {
 /// describes a simple HandlerError type.
 pub struct HandlerError {
     pub message: String
+}
+
+impl From<MathLibError> for HandlerError {
+    fn from(value: MathLibError) -> Self {
+        HandlerError { message: value.get_reason() }
+    }
 }
 
 /// describes the REPL
