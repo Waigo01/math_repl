@@ -165,16 +165,17 @@ fn save_solved_eq(msg: String, var: String, global_state: &mut (Vec<Variable>, V
 const HELP_MESSAGE: &str = "You can do 4 basic operations:
         Calculate something: <expr>
         Save the results of a calculation to a variable: <varName> = <expr>
-        Solve an equation (using x as variable to solve for): eq <expr> = <expr>
-        Solve an equation and save it into a variable (using <varName> as variable to solve for): <varName> = eq <expr> = <expr>
+        Solve an equation or a system of equations: eq <expr> = <expr> (, <expr> = <expr>, ...)
+        Solve an equation or a system of equations and save it into a variable: <varName> = eq <expr> = <expr> (, <expr> = <expr>, ...)
     As an <expr> counts:
         A scalar (number): <number>
         A vector: [<1>, <2>, ..., <n>]
-        A matrix: [[<1:1>, <1:2>, ..., <1:n>], [<2:1>, <2:2>, ..., <2:n>], ..., [<n:1>, <n:2>, ..., <n:n>]]
+        A matrix: [[<1:1>, <1:2>, ..., <1:n>], [<2:1>, <2:2>, ..., <2:n>], ..., [<n:1>, <n:2>, ..., <n:n>]] (column major order)
         A Variable: Any previously defined variable.
 
-        You can also use all common operations (see https://docs.rs/math_utils_lib/latest/math_utils_lib/parser/enum.OpType.html)
+        You can also use all common operations (see https://docs.rs/math_utils_lib/latest/math_utils_lib/parser/enum.SimpleOpType.html)
         between all different types (It will tell you, when it can't calculate something).
+        Additionally there are some advanced operations (see https://docs.rs/math_utils_lib/latest/math_utils_lib/parser/enum.AdvancedOpType.html).
     Additional commands:
         clear: Clears the screen, the history for LaTeX export and all vars except pi and e.
         clearvars: Clears all vars except pi and e.
