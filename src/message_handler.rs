@@ -24,18 +24,18 @@ fn check_var_name(var: String) -> bool {
     return true;
 }
 
-fn prepare_and_calc_expr(mut expr: String, global_state: &mut (Vec<Variable>, Vec<StepType>)) -> Result<Value, MathLibError> {
+fn prepare_and_calc_expr(mut expr: String, global_state: &mut (Vec<Variable>, Vec<StepType>), variable: Option<String>) -> Result<Value, MathLibError> {
     expr = expr.trim().split(" ").filter(|s| !s.is_empty()).collect();
     let parsed = parse(expr)?;
     let res = eval(&parsed, &global_state.0)?;
 
-    global_state.1.push(StepType::Calc((parsed, res.clone(), None)));
+    global_state.1.push(StepType::Calc((parsed, res.clone(), variable)));
 
     return Ok(res)
 }
 
 fn calc_expr(msg: String, global_state: &mut (Vec<Variable>, Vec<StepType>)) -> Result<String, MathLibError> {
-    let res = prepare_and_calc_expr(msg, global_state)?;
+    let res = prepare_and_calc_expr(msg, global_state, None)?;
     let output_msg = res.pretty_print(None);
     return Ok(output_msg);
 }
@@ -44,7 +44,7 @@ fn save_calc_expr(msg: String, var: String, global_state: &mut (Vec<Variable>, V
     if !check_var_name(var.clone()) {
         return Err(MathLibError::Other("Invalid Variable Name!".to_string()));
     }
-    let res = prepare_and_calc_expr(msg, global_state)?; 
+    let res = prepare_and_calc_expr(msg, global_state, Some(var.clone()))?;
     let mut found = false;
     for i in 0..global_state.0.len() {
         if global_state.0[i].name == var {
