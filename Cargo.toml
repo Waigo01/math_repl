@@ -1,7 +1,7 @@
 [package]
 name = "math_repl"
 version = "0.2.1"
-edition = "2021"
+edition = "2024"
 description = "Simple REPL for all different kinds of math."
 license-file = "LICENSE.txt"
 repository = "https://github.com/Waigo01/math_repl"
@@ -20,6 +20,9 @@ doc-images = []
 features = ["doc-images"]
 
 [dependencies]
-console = "0.15.8"
+base64 = "0.22.1"
+console = "0.16.3"
 embed-doc-image = "0.1.4"
-math_utils_lib = "^0.3.0"
+math_utils_lib = { git = "https://github.com/Waigo01/math_utils_lib.git", branch = "dev", features=["output"]}
+resvg = { version = "0.43.0" }
+mathjax_svg = { version = "3.1.2", optional = true }

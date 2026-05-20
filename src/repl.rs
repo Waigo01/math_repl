@@ -1,7 +1,7 @@
 use std::{any::Any, error::Error, io::Write};
 
 use console::{style, Key, Term};
-use math_utils_lib::MathLibError;
+use math_utils_lib::{Context, MathLibError, Step};
 
 /// describes internal commands for [Repl] to execute.
 pub enum Exec {
@@ -15,14 +15,25 @@ pub enum Action {
     Exec(Exec)
 }
 
+pub struct State {
+    pub context: Context,
+    pub history: Vec<Step>
+}
+
+impl State {
+    pub fn new(context: Context) -> Self {
+        return State { context, history: vec![] };
+    }
+}
+
 /// describes a simple HandlerError type.
 pub struct HandlerError {
     pub message: String
 }
 
-impl From<MathLibError> for HandlerError {
-    fn from(value: MathLibError) -> Self {
-        HandlerError { message: value.get_reason() }
+impl<E: Into<MathLibError>> From<E> for HandlerError {
+    fn from(value: E) -> Self {
+        HandlerError { message: value.into().get_reason() }
     }
 }
 
@@ -56,17 +67,17 @@ impl From<MathLibError> for HandlerError {
 ///
 ///This crude message_handler will take four inputs and print back "Hello World: \<input\>". It
 ///will exit on the fifth input.
-pub struct Repl<T: Any + Clone, F: FnMut(String, &mut T) -> Result<Action, HandlerError>> {
+pub struct Repl<F: FnMut(String, &mut State, i32, bool) -> Result<Action, HandlerError>> {
     term: Term,
     input_prefix: String,
     output_prefix: String,
     pub message_handler: F,
-    pub global_state: T
+    pub global_state: State
 }
 
-impl<T: Any + Clone, F: FnMut(String, &mut T) -> Result<Action, HandlerError>> Repl<T, F> {
+impl<F: FnMut(String, &mut State, i32, bool) -> Result<Action, HandlerError>> Repl<F> {
     /// used to initialize a new [Repl].
-    pub fn new(input_prefix: String, output_prefix: String, initial_state: T, handler: F) -> Repl<T, F> {
+    pub fn new(input_prefix: String, output_prefix: String, initial_state: State, handler: F) -> Repl<F> {
         Repl {
             term: Term::stdout(),
             input_prefix,
@@ -78,6 +89,24 @@ impl<T: Any + Clone, F: FnMut(String, &mut T) -> Result<Action, HandlerError>> R
     /// used to run a [Repl].
     pub fn run_repl(&mut self) -> Result<(), Box<dyn Error>> {
         let mut history: Vec<String> = vec![];
+        self.term.set_title("math_repl");
+        self.term.write_line("\x1b[16t")?;
+        let mut escape_return = String::new();
+        while let Ok(char) = self.term.read_char() && char != 't' {
+            escape_return.push(char);
+        }
+        let cell_height = escape_return.split(";").nth(0).unwrap().parse::<i32>().unwrap();
+
+        self.term.write_line("\x1b_Gi=31,s=1,v=1,a=q,t=d,f=24;AAAA\x1b\\\x1b[c")?;
+        let mut escape_return = String::new();
+        while let Ok(char) = self.term.read_char() && char != 'c' {
+            escape_return.push(char);
+        }
+
+        let use_kitty = cell_height != 0 && escape_return.contains("OK");
+
+        self.term.write_line("")?;
+
         self.term.clear_screen()?;
         loop {
             self.term.write(self.input_prefix.as_bytes())?;
@@ -160,7 +189,7 @@ impl<T: Any + Clone, F: FnMut(String, &mut T) -> Result<Action, HandlerError>> R
             }
             history = history.into_iter().filter(|x| x != &input_buffer).collect();
             history.insert(0, input_buffer.clone());
-            let output = (self.message_handler)(input_buffer, &mut self.global_state);
+            let output = (self.message_handler)(input_buffer, &mut self.global_state, cell_height, use_kitty);
             match output {
                 Ok(s) => {
                     match s {
