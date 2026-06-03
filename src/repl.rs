@@ -1,18 +1,17 @@
-use std::{any::Any, error::Error, io::Write};
+use std::{error::Error, io::Write, time::Duration};
 
 use console::{style, Key, Term};
 use math_utils_lib::{Context, MathLibError, Step};
 
-/// describes internal commands for [Repl] to execute.
 pub enum Exec {
     Exit,
     Clear
 }
 
-/// describes the type of action that should be taken by [Repl].
 pub enum Action {
     Print(String),
-    Exec(Exec)
+    Exec(Exec),
+    Tutorial
 }
 
 pub struct State {
@@ -26,7 +25,6 @@ impl State {
     }
 }
 
-/// describes a simple HandlerError type.
 pub struct HandlerError {
     pub message: String
 }
@@ -37,37 +35,9 @@ impl<E: Into<MathLibError>> From<E> for HandlerError {
     }
 }
 
-/// describes the REPL
-///
-/// A REPL can be initialized using the [new()](fn@Repl::new()) method. This method requires an input_prefix, which
-/// is printed before any input is taken, an output_prefix, which is printed before any output is printed,
-/// an initial_state, which is described by the Generic T and a handler, which is a function of type
-/// ```FnMut(String, &mut T) -> Result<Action, HandlerError>```.
-///
-/// After the initialization a REPL can be run using the [run_repl()](fn@Repl::run_repl()) method.
-///
-/// # Example
-///
-/// ```
-/// let initial_state: Vec<String> = vec![];
-///
-/// fn message_handler(input: String, global_state: &mut Vec<String>) -> Result<Action, HandlerError> {
-///     if global_state.len() > 3 {
-///         return Ok(Action::Exec(Exec::Exit));
-///     } else {
-///         global_state.push("Hello World".to_string());
-///         return Ok(Action::Print(format!("{}: {}", global_state[global_state.len()-1], input)));
-///     }
-/// }
-///
-/// let mut repl = Repl::new("> ".to_string(), "| ".to_string(), initial_state, message_handler);
-///
-/// repl.run_repl()?;
-///```
-///
-///This crude message_handler will take four inputs and print back "Hello World: \<input\>". It
-///will exit on the fifth input.
-pub struct Repl<F: FnMut(String, &mut State, i32, bool) -> Result<Action, HandlerError>> {
+const REPL_EXAMPLES: [(&'static str, &'static str); 14] = [("You can do the most basic of calculations: ", "3*3"), ("You can also create variables: ", "a=3"), ("And then do calculations with those variables: ", "3a"), ("You can also save matrices to variables: ", "M = [[3, 4, 5], [1, 2, 3], [5, 6, 7]]"), ("And do some calculations with them: ", "3*M"), ("Vectors are also supported: ", "B = [2, 3, 4]"), ("As is linear algebra: ", "M*B"), ("You can even create custom functions with one or multiple variables as inputs: ", "f(x) = 5x^2+2x+x"), ("There is also support for lists of values. This will evaluate the function f at both 5 and 10: ", "f({5, 10})"), ("There is even an equation solver. The inputs can be read as 'solve equation x^2=9 in terms of x': ", "eq(x^2=9, x)"), ("This equation solver can also solve systems of equations: ", "eq(2x+5y+2z=-38, 3x-2y+4z=17, -6x+y-7z=-12, x, y, z)"), ("You can also do some boolean operations: ", "3==3 & 2<4"), ("Then you can create functions with case distinctions: ", "relu(x) = if(x < 0, 0, x)"), ("And lastly you can export the steps to a pdf: ", "export")];
+
+pub struct Repl<F: FnMut(String, &mut State, i32, bool, String) -> Result<Action, HandlerError>> {
     term: Term,
     input_prefix: String,
     output_prefix: String,
@@ -75,7 +45,7 @@ pub struct Repl<F: FnMut(String, &mut State, i32, bool) -> Result<Action, Handle
     pub global_state: State
 }
 
-impl<F: FnMut(String, &mut State, i32, bool) -> Result<Action, HandlerError>> Repl<F> {
+impl<F: FnMut(String, &mut State, i32, bool, String) -> Result<Action, HandlerError>> Repl<F> {
     /// used to initialize a new [Repl].
     pub fn new(input_prefix: String, output_prefix: String, initial_state: State, handler: F) -> Repl<F> {
         Repl {
@@ -86,37 +56,96 @@ impl<F: FnMut(String, &mut State, i32, bool) -> Result<Action, HandlerError>> Re
             global_state: initial_state
         }
     }
-    /// used to run a [Repl].
+    fn read_escape_code<S: Into<String>>(&self, code: S) -> Result<String, Box<dyn Error>> {
+        self.term.write_line(&code.into())?;
+        let mut escape_return = String::new();
+        while let Ok(key) = self.term.read_key_raw() {
+            match key {
+                Key::Char(char) if char == 'c' => break,
+                Key::Char(char) => {
+                    escape_return.push(char);
+                },
+                Key::UnknownEscSeq(_) => {
+                    escape_return.push('\\');
+                },
+                _ => break
+            }
+        }
+        Ok(escape_return)
+    }
+    fn write_char_by_char<S: Into<String>>(&mut self, input: S) -> Result<(), Box<dyn Error>> {
+        for char in input.into().chars() {
+            self.term.write(char.to_string().as_bytes())?;
+            std::thread::sleep(Duration::from_millis(30));
+        }
+
+        Ok(())
+    }
+
     pub fn run_repl(&mut self) -> Result<(), Box<dyn Error>> {
         let mut history: Vec<String> = vec![];
         self.term.set_title("math_repl");
-        self.term.write_line("\x1b[16t")?;
-        let mut escape_return = String::new();
-        while let Ok(char) = self.term.read_char() && char != 't' {
-            escape_return.push(char);
-        }
-        let cell_height = escape_return.split(";").nth(0).unwrap().parse::<i32>().unwrap();
 
-        self.term.write_line("\x1b_Gi=31,s=1,v=1,a=q,t=d,f=24;AAAA\x1b\\\x1b[c")?;
-        let mut escape_return = String::new();
-        while let Ok(char) = self.term.read_char() && char != 'c' {
-            escape_return.push(char);
-        }
+        let escape_return = self.read_escape_code("\x1b[16t\x1b[c")?;
+        let cell_height = escape_return.split(";").nth(0).unwrap()[1..].parse::<i32>().unwrap_or(0);
 
+        let escape_return = self.read_escape_code("\x1b_Gi=31,s=1,v=1,a=q,t=d,f=24;AAAA\x1b\\\x1b[c")?;
         let use_kitty = cell_height != 0 && escape_return.contains("OK");
+        if use_kitty {
+            self.term.write_line("\x1b_Ga=d\x1b\\")?;
+        }
 
-        self.term.write_line("")?;
+        let escape_return = self.read_escape_code("\x1b]10;?\x07\x1b[c")?;
+
+        let mut fg_color = "#FFFFFF".to_string();
+
+        if escape_return.contains("rgb:") {
+            let split = escape_return.split("rgb:").nth(1).unwrap();
+            let split = split.split("\\").nth(0).unwrap();
+
+            let mut split = split.split("/");
+
+            let mut hex = "#".to_string();
+
+            while let Some(c) = split.next() {
+                hex += &c[0..2];
+            }
+
+            if hex.len() == 7 {
+                fg_color = hex;
+            }
+        }
 
         self.term.clear_screen()?;
+
+        let mut tutorial: Option<usize> = None;
+
         loop {
-            self.term.write(self.input_prefix.as_bytes())?;
-            self.term.flush()?;
             let mut input_buffer = String::new();
+            if let Some(example_step) = tutorial && example_step < REPL_EXAMPLES.len() {
+                self.term.write("   ".as_bytes())?;
+                self.term.flush()?;
+                self.write_char_by_char(REPL_EXAMPLES[example_step].0)?;
+                self.term.write_line("")?;
+
+                self.term.write(self.input_prefix.as_bytes())?;
+                self.term.flush()?;
+
+                self.term.write(REPL_EXAMPLES[example_step].1.as_bytes())?;
+                input_buffer = REPL_EXAMPLES[example_step].1.to_string();
+            } else if tutorial.is_some() {
+                tutorial = None;
+                self.term.write(self.input_prefix.as_bytes())?;
+                self.term.flush()?;
+            } else {
+                self.term.write(self.input_prefix.as_bytes())?;
+                self.term.flush()?;
+            }
             let mut position = 0;
             let mut history_pos = -1;
             loop {
                 match self.term.read_key()? {
-                    Key::Char(c) => {
+                    Key::Char(c) if tutorial.is_none() => {
                         if position == input_buffer.len() {
                             input_buffer.push(c);
                         } else {
@@ -128,19 +157,19 @@ impl<F: FnMut(String, &mut State, i32, bool) -> Result<Action, HandlerError>> Re
                         self.term.write(input_buffer.as_bytes())?;
                         self.term.move_cursor_left(input_buffer.len()-position)?;
                     },
-                    Key::ArrowLeft => {
+                    Key::ArrowLeft if tutorial.is_none() => {
                         if position as i32-1 >= 0 {
                             self.term.move_cursor_left(1)?;
                             position -= 1;
                         } 
                     },
-                    Key::ArrowRight => {
+                    Key::ArrowRight if tutorial.is_none() => {
                         if position+1 <= input_buffer.len() {
                             self.term.move_cursor_right(1)?;
                             position += 1;
                         }
                     },
-                    Key::Backspace => {
+                    Key::Backspace if tutorial.is_none() => {
                         if position as i32-1 >= 0 {
                             input_buffer.remove(position-1);
                             position -= 1;
@@ -150,7 +179,7 @@ impl<F: FnMut(String, &mut State, i32, bool) -> Result<Action, HandlerError>> Re
                             self.term.move_cursor_left(input_buffer.len()-position)?;
                         } 
                     },
-                    Key::ArrowUp => {
+                    Key::ArrowUp if tutorial.is_none() => {
                         if history_pos + 1 < history.len() as i32 && history_pos + 1 >= 0 {
                             history_pos += 1;
                             self.term.move_cursor_right(input_buffer.len()-position)?;
@@ -160,7 +189,7 @@ impl<F: FnMut(String, &mut State, i32, bool) -> Result<Action, HandlerError>> Re
                             position = input_buffer.len();
                         }
                     },
-                    Key::ArrowDown => {
+                    Key::ArrowDown if tutorial.is_none() => {
                         if history_pos - 1 >= 0 {
                             history_pos -= 1;
                             self.term.move_cursor_right(input_buffer.len()-position)?;
@@ -189,7 +218,7 @@ impl<F: FnMut(String, &mut State, i32, bool) -> Result<Action, HandlerError>> Re
             }
             history = history.into_iter().filter(|x| x != &input_buffer).collect();
             history.insert(0, input_buffer.clone());
-            let output = (self.message_handler)(input_buffer, &mut self.global_state, cell_height, use_kitty);
+            let output = (self.message_handler)(input_buffer, &mut self.global_state, cell_height, use_kitty, fg_color.clone());
             match output {
                 Ok(s) => {
                     match s {
@@ -202,13 +231,23 @@ impl<F: FnMut(String, &mut State, i32, bool) -> Result<Action, HandlerError>> Re
                         Action::Exec(e) => {
                             match e {
                                 Exec::Exit => {
+                                    if use_kitty {
+                                        self.term.write_line("\x1b_Ga=d\x1b\\")?;
+                                    }
                                     self.term.clear_screen()?;
                                     return Ok(());
                                 },
                                 Exec::Clear => {
+                                    if use_kitty {
+                                        self.term.write_line("\x1b_Ga=d\x1b\\")?;
+                                    }
                                     self.term.clear_screen()?;
                                 }
                             }
+                        },
+                        Action::Tutorial => {
+                            tutorial = Some(0);
+                            continue;
                         }
                     } 
                 },
@@ -218,6 +257,9 @@ impl<F: FnMut(String, &mut State, i32, bool) -> Result<Action, HandlerError>> Re
                         self.term.write_line(&format!("{}{}", self.output_prefix, style(i).red().bold()))?;
                     }
                 }
+            }
+            if let Some(example_step) = tutorial.as_mut() {
+                *example_step += 1;
             }
         }
     }

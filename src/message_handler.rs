@@ -4,25 +4,32 @@ use base64::prelude::*;
 
 use crate::repl::{Action, Exec, HandlerError, State};
 
-pub fn png_from_latex<S: Into<String>>(latex: String, line_color: S) -> Result<(Vec<u8>, u32), LatexError> {
-    use resvg::{render, tiny_skia::Pixmap, usvg::{Options, Transform, Tree}};
+use resvg::{render, tiny_skia::Pixmap, usvg::{Options, Transform, Tree}};
 
+const BASE_SVG_HEIGHT: f32 = 10.;
+
+pub fn png_from_latex<S: Into<String>>(latex: String, line_color: S, height: i32) -> Result<(Vec<u8>, u32), LatexError> {
     let svg = svg_from_latex(latex, line_color)?;
 
     let tree = Tree::from_str(&svg, &Options::default())?;
 
-    let height = (tree.size().width() * 1.5) as u32;
+    let height_scale = height as f32/BASE_SVG_HEIGHT*0.65;
 
-    let mut pixmap = Pixmap::new(height, (tree.size().height() * 1.5) as u32).unwrap();
+    let height = tree.size().height() * height_scale;
 
-    render(&tree, Transform::from_row(1.5, 0., 0., 1.5, 0., 0.), &mut pixmap.as_mut());
+    let dest_width = ((tree.size().width()/tree.size().height()) * height as f32).ceil();
+    let width_scale = dest_width/tree.size().width();
+
+    let mut pixmap = Pixmap::new(dest_width as u32, height as u32).unwrap();
+
+    render(&tree, Transform::from_row(width_scale, 0., 0., height_scale, 0., 0.), &mut pixmap.as_mut());
 
     Ok((pixmap.encode_png().ok().unwrap(), pixmap.height()))
 }
 
 pub fn print_latex_kitty(latex: String, color: String, cell_height: i32) -> Result<String, HandlerError> {
 
-    let (png, height) = png_from_latex(latex, color)?;
+    let (png, height) = png_from_latex(latex, color, cell_height)?;
 
     let mut temp_dir = std::env::temp_dir();
 
@@ -39,33 +46,7 @@ pub fn print_latex_kitty(latex: String, color: String, cell_height: i32) -> Resu
     return Ok(format!("{command}{}", (0..n_newlines).map(|_| "\n".to_string()).collect::<Vec<String>>().join("")));
 }
 
-const HELP_MESSAGE: &str = "You can do 4 basic operations:
-        Calculate something: <expr>
-        Save the results of a calculation to a variable: <varName> = <expr>
-        Solve an equation or a system of equations: eq <expr> = <expr> (, <expr> = <expr>, ...)
-        Solve an equation or a system of equations and save it into a variable: <varName> = eq <expr> = <expr> (, <expr> = <expr>, ...)
-    As an <expr> counts:e Ru
-        A scalar (number): <number>
-        A vector: [<1>, <2>, ..., <n>]
-        A matrix: [[<1:1>, <1:2>, ..., <1:n>], [<2:1>, <2:2>, ..., <2:n>], ..., [<n:1>, <n:2>, ..., <n:n>]] (column major order)
-        A Variable: Any previously defined variable.
-
-        You can also use all common operations (see https://docs.rs/math_utils_lib/latest/math_utils_lib/parser/enum.SimpleOpType.html)
-        between all different types (It will tell you, when it can't calculate something).
-        Additionally there are some advanced operations (see https://docs.rs/math_utils_lib/latest/math_utils_lib/parser/enum.AdvancedOpType.html).
-    Additional commands:
-        clear: Clears the screen, the history for LaTeX export and all vars except pi and e.
-        clearvars: Clears all vars except pi and e.
-        vars: Displays all vars.
-        export (< --tex | --png | --pdf >): Exports history since last clear in specified format (leave blank for pdf).
-        help: This help page.
-        exit: Exits the REPL.
-    Some rules:
-        Variable Names must start with an alphabetical letter or a \\. (Greek symbols in LaTeX style get replaced before printing).
-        Numbers in Variable Names are only allowed in LaTeX style subscript.
-        Any other rules will be explained to you in a (not so) nice manner by the program."; 
-
-pub fn handle_message(msg: String, global_state: &mut State, cell_height: i32, use_kitty: bool) -> Result<Action, HandlerError> {
+pub fn handle_message(msg: String, global_state: &mut State, cell_height: i32, use_kitty: bool, foreground: String) -> Result<Action, HandlerError> {
     if msg.len() == 4 && msg[0..=3].to_string().to_uppercase() == "VARS" {
         if use_kitty {
             let latex_vars: String = "\\begin{align}".to_string() + &global_state.context.vars.iter()
@@ -78,7 +59,7 @@ pub fn handle_message(msg: String, global_state: &mut State, cell_height: i32, u
                 .collect::<Vec<String>>()
                 .join(" \\\\") + "\\end{align}";
 
-            let output = print_latex_kitty(latex_vars + &latex_funs, "#FFFFFF".to_string(), cell_height)?;
+            let output = print_latex_kitty(latex_vars + &latex_funs, foreground, cell_height)?;
 
             return Ok(Action::Print(output))
         } else {
@@ -104,7 +85,7 @@ pub fn handle_message(msg: String, global_state: &mut State, cell_height: i32, u
         return Ok(Action::Exec(Exec::Exit));
     }
     if msg.len() == 4 && msg[0..=3].to_string().to_uppercase() == "HELP" {
-        return Ok(Action::Print(HELP_MESSAGE.to_string()));
+        return Ok(Action::Tutorial);
     }
     if msg.split(" ").nth(0).unwrap().len() == 6 && msg[0..=5].to_string().to_uppercase() == "EXPORT" {
         match msg.to_lowercase().as_str() {
@@ -164,7 +145,7 @@ pub fn handle_message(msg: String, global_state: &mut State, cell_height: i32, u
                 .collect::<Vec<String>>()
                 .join(" \\\\") + "\\end{align}";
 
-            let output = print_latex_kitty(latex_vars + &latex_funs, "#FFFFFF".to_string(), cell_height)?;
+            let output = print_latex_kitty(latex_vars + &latex_funs, foreground, cell_height)?;
 
             return Ok(Action::Print(output))
         } else {
@@ -196,7 +177,7 @@ pub fn handle_message(msg: String, global_state: &mut State, cell_height: i32, u
     global_state.history.push(step);
     
     if use_kitty {
-        let output = print_latex_kitty(latex, "#FFFFFF".to_string(), cell_height)?;
+        let output = print_latex_kitty(latex, foreground, cell_height)?;
 
         return Ok(Action::Print(output));
     } else {
