@@ -2026,6 +2026,7 @@ name = "math_repl"
 version = "0.3.0"
 dependencies = [
  "base64 0.22.1",
+ "clap",
  "console",
  "embed-doc-image",
  "math_utils_lib",
