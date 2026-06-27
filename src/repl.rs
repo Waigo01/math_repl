@@ -1,7 +1,7 @@
 use std::{error::Error, io::Write, time::Duration};
 
 use console::{style, Key, Term};
-use math_utils_lib::{Context, MathLibError, Step};
+use math_utils_lib::{Context, MathLibError, Number, Step};
 
 pub enum Exec {
     Exit,
@@ -14,13 +14,13 @@ pub enum Action {
     Tutorial
 }
 
-pub struct State {
-    pub context: Context,
-    pub history: Vec<Step>
+pub struct State<N: Number> {
+    pub context: Context<N>,
+    pub history: Vec<Step<N>>
 }
 
-impl State {
-    pub fn new(context: Context) -> Self {
+impl<N: Number> State<N> {
+    pub fn new(context: Context<N>) -> Self {
         return State { context, history: vec![] };
     }
 }
@@ -37,17 +37,17 @@ impl<E: Into<MathLibError>> From<E> for HandlerError {
 
 const REPL_EXAMPLES: [(&'static str, &'static str); 14] = [("You can do the most basic of calculations: ", "3*3"), ("You can also create variables: ", "a=3"), ("And then do calculations with those variables: ", "3a"), ("You can also save matrices to variables: ", "M = [[3, 4, 5], [1, 2, 3], [5, 6, 7]]"), ("And do some calculations with them: ", "3*M"), ("Vectors are also supported: ", "B = [2, 3, 4]"), ("As is linear algebra: ", "M*B"), ("You can even create custom functions with one or multiple variables as inputs: ", "f(x) = 5x^2+2x+x"), ("There is also support for lists of values. This will evaluate the function f at both 5 and 10: ", "f({5, 10})"), ("There is even an equation solver. The inputs can be read as 'solve equation x^2=9 in terms of x': ", "eq(x^2=9, x)"), ("This equation solver can also solve systems of equations: ", "eq(2x+5y+2z=-38, 3x-2y+4z=17, -6x+y-7z=-12, x, y, z)"), ("You can also do some boolean operations: ", "3==3 & 2<4"), ("Then you can create functions with case distinctions: ", "relu(x) = if(x < 0, 0, x)"), ("And lastly you can export the steps to a pdf: ", "export")];
 
-pub struct Repl<F: FnMut(String, &mut State, i32, bool, String) -> Result<Action, HandlerError>> {
+pub struct Repl<N: Number, F: FnMut(String, &mut State<N>, i32, bool, String) -> Result<Action, HandlerError>> {
     term: Term,
     input_prefix: String,
     output_prefix: String,
     pub message_handler: F,
-    pub global_state: State
+    pub global_state: State<N>
 }
 
-impl<F: FnMut(String, &mut State, i32, bool, String) -> Result<Action, HandlerError>> Repl<F> {
+impl<N: Number, F: FnMut(String, &mut State<N>, i32, bool, String) -> Result<Action, HandlerError>> Repl<N, F> {
     /// used to initialize a new [Repl].
-    pub fn new(input_prefix: String, output_prefix: String, initial_state: State, handler: F) -> Repl<F> {
+    pub fn new(input_prefix: String, output_prefix: String, initial_state: State<N>, handler: F) -> Repl<N, F> {
         Repl {
             term: Term::stdout(),
             input_prefix,

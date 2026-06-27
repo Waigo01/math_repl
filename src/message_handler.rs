@@ -1,4 +1,4 @@
-use math_utils_lib::{Context, ExportType, Step, errors::LatexError, eval, export_history, parse, svg_from_latex};
+use math_utils_lib::{Context, ExportType, Number, Step, errors::LatexError, eval, export_history, parse, svg_from_latex};
 
 use base64::prelude::*;
 
@@ -46,7 +46,7 @@ pub fn print_latex_kitty(latex: String, color: String, cell_height: i32) -> Resu
     return Ok(format!("{command}{}", (0..n_newlines).map(|_| "\n".to_string()).collect::<Vec<String>>().join("")));
 }
 
-pub fn handle_message(msg: String, global_state: &mut State, cell_height: i32, use_kitty: bool, foreground: String) -> Result<Action, HandlerError> {
+pub fn handle_message<N: Number>(msg: String, global_state: &mut State<N>, cell_height: i32, use_kitty: bool, foreground: String) -> Result<Action, HandlerError> {
     if msg.len() == 4 && msg[0..=3].to_string().to_uppercase() == "VARS" {
         if use_kitty {
             let latex_vars: String = "\\begin{align}".to_string() + &global_state.context.vars.iter()
