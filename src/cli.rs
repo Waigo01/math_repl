@@ -1,7 +1,7 @@
-use math_utils_lib::{Context, ExportType, Step, eval, export_history, parse};
+use math_utils_lib::{Context, ExportType, Number, Step, eval, export_history, parse};
 
-pub fn handle_expressions(expressions: Vec<String>) {
-    let mut context = Context::default();
+pub fn handle_expressions<N: Number>(expressions: Vec<String>) {
+    let mut context: Context<N> = Context::default();
     let mut history = vec![];
 
     for expression in expressions {

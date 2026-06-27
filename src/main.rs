@@ -1,4 +1,4 @@
-use math_utils_lib::Context;
+use math_utils_lib::{Complex, Context};
 use message_handler::handle_message;
 
 pub mod repl;
@@ -14,27 +14,32 @@ use clap::Parser;
 struct Args {
     /// Expression(s) to evaluate
     #[arg(short, long, required=false)]
-    eval: Option<Vec<String>>
+    eval: Option<Vec<String>>,
+    /// Whether to use complex numbers
+    #[arg(short, long, required=false)]
+    complex: bool
 }
 
 pub fn main() {
     let args = Args::parse();
 
-    match args.eval {
-        None => {
-            let initial_state = State::new(Context::default());
+    if let Some(expressions) = args.eval && expressions.len() != 0 {
+        if args.complex {
+            handle_expressions::<Complex<f64>>(expressions);
+        } else {
+            handle_expressions::<f64>(expressions);
+        }
+    } else {
+        if args.complex {
+            let initial_state: State<Complex<f64>> = State::new(Context::default());
             let mut repl = Repl::new("-> ".to_string(), "   ".to_string(), initial_state, handle_message);
 
             let _ = repl.run_repl();
-        },
-        Some(expressions) if expressions.len() == 0 => {
-            let initial_state = State::new(Context::default());
+        } else {
+            let initial_state: State<f64> = State::new(Context::default());
             let mut repl = Repl::new("-> ".to_string(), "   ".to_string(), initial_state, handle_message);
 
             let _ = repl.run_repl();
-        },
-        Some(expressions) => {
-            handle_expressions(expressions);
         }
     }
 }
