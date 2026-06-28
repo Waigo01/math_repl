@@ -12,7 +12,7 @@ use clap::Parser;
 #[derive(Parser, Debug)]
 #[command(version, about, long_about = None)]
 struct Args {
-    /// Expression(s) to evaluate
+    /// Expression(s) to evaluate directly without opening a repl
     #[arg(short, long, required=false)]
     eval: Option<Vec<String>>,
     /// Whether to use complex numbers
