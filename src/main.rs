@@ -32,12 +32,12 @@ pub fn main() {
     } else {
         if args.complex {
             let initial_state: State<Complex<f64>> = State::new(Context::default());
-            let mut repl = Repl::new("-> ".to_string(), "   ".to_string(), initial_state, handle_message);
+            let mut repl = Repl::new("→ ".to_string(), "  ".to_string(), initial_state, handle_message);
 
             let _ = repl.run_repl();
         } else {
             let initial_state: State<f64> = State::new(Context::default());
-            let mut repl = Repl::new("-> ".to_string(), "   ".to_string(), initial_state, handle_message);
+            let mut repl = Repl::new("→ ".to_string(), "  ".to_string(), initial_state, handle_message);
 
             let _ = repl.run_repl();
         }

@@ -123,7 +123,7 @@ impl<N: Number, F: FnMut(String, &mut State<N>, i32, bool, String) -> Result<Act
         loop {
             let mut input_buffer = String::new();
             if let Some(example_step) = tutorial && example_step < REPL_EXAMPLES.len() {
-                self.term.write("   ".as_bytes())?;
+                self.term.write("  ".as_bytes())?;
                 self.term.flush()?;
                 self.write_char_by_char(REPL_EXAMPLES[example_step].0)?;
                 self.term.write_line("")?;
