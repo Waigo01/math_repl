@@ -1,6 +1,6 @@
 use std::{error::Error, io::Write, time::Duration};
 
-use console::{style, Key, Term};
+use console::{Key, Term, TermFamily, style};
 use math_utils_lib::{Context, MathLibError, Number, Step};
 
 use crate::message_handler::LocalLatexError;
@@ -95,13 +95,21 @@ impl<N: Number, F: FnMut(String, &mut State<N>, i32, bool, String) -> Result<Act
     }
 
     pub fn run_repl(&mut self) -> Result<(), Box<dyn Error>> {
-        let mut history: Vec<String> = vec![];
         self.term.set_title("math_repl");
-        let escape_return = self.read_escape_code("\x1b_Gi=31,s=1,v=1,a=q,t=d,f=24;AAAA\x1b\\\x1b[c")?;
+        
+        let mut history: Vec<String> = vec![];
 
+        let features = self.term.features();
         let cell_height;
         let use_kitty;
         let mut fg_color = "#FFFFFF".to_string();
+
+        let escape_return = if !features.is_msys_tty() && features.family() == TermFamily::UnixTerm {
+            self.read_escape_code("\x1b_Gi=31,s=1,v=1,a=q,t=d,f=24;AAAA\x1b\\\x1b[c")?
+        } else {
+            String::new()
+        };
+
 
         if escape_return.contains("OK") {
             let escape_return = self.read_escape_code("\x1b[16t\x1b[c")?;
@@ -140,8 +148,6 @@ impl<N: Number, F: FnMut(String, &mut State<N>, i32, bool, String) -> Result<Act
             cell_height = 0;
             use_kitty = false;
         }
-
-        
 
         self.term.clear_screen()?;
 
