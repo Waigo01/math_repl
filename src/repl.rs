@@ -97,36 +97,51 @@ impl<N: Number, F: FnMut(String, &mut State<N>, i32, bool, String) -> Result<Act
     pub fn run_repl(&mut self) -> Result<(), Box<dyn Error>> {
         let mut history: Vec<String> = vec![];
         self.term.set_title("math_repl");
-
-        let escape_return = self.read_escape_code("\x1b[16t\x1b[c")?;
-        let cell_height = escape_return.split(";").nth(0).unwrap()[1..].parse::<i32>().unwrap_or(0);
-
         let escape_return = self.read_escape_code("\x1b_Gi=31,s=1,v=1,a=q,t=d,f=24;AAAA\x1b\\\x1b[c")?;
-        let use_kitty = cell_height != 0 && escape_return.contains("OK");
-        if use_kitty {
-            self.term.write_line("\x1b_Ga=d\x1b\\")?;
-        }
 
-        let escape_return = self.read_escape_code("\x1b]10;?\x07\x1b[c")?;
-
+        let cell_height;
+        let use_kitty;
         let mut fg_color = "#FFFFFF".to_string();
 
-        if escape_return.contains("rgb:") {
-            let split = escape_return.split("rgb:").nth(1).unwrap();
-            let split = split.split("\\").nth(0).unwrap();
+        if escape_return.contains("OK") {
+            let escape_return = self.read_escape_code("\x1b[16t\x1b[c")?;
 
-            let mut split = split.split("/");
+            let mut cell_height_split = escape_return.split(";");
+            cell_height = if cell_height_split.clone().count() != 0 && let Some(height) = cell_height_split.nth(0) && height.len() >= 2 && let Ok(parsed_height) = height[1..].parse::<i32>() {
+                parsed_height
+            } else {
+                0
+            };
 
-            let mut hex = "#".to_string();
-
-            while let Some(c) = split.next() {
-                hex += &c[0..2];
+            use_kitty = cell_height != 0;
+            if use_kitty {
+                self.term.write_line("\x1b_Ga=d\x1b\\")?;
             }
 
-            if hex.len() == 7 {
-                fg_color = hex;
+            let escape_return = self.read_escape_code("\x1b]10;?\x07\x1b[c")?;
+
+            if escape_return.contains("rgb:") {
+                let split = escape_return.split("rgb:").nth(1).unwrap();
+                let split = split.split("\\").nth(0).unwrap();
+
+                let mut split = split.split("/");
+
+                let mut hex = "#".to_string();
+
+                while let Some(c) = split.next() {
+                    hex += &c[0..2];
+                }
+
+                if hex.len() == 7 {
+                    fg_color = hex;
+                }
             }
+        } else {
+            cell_height = 0;
+            use_kitty = false;
         }
+
+        
 
         self.term.clear_screen()?;
 
