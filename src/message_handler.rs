@@ -1,4 +1,7 @@
-use math_utils_lib::{Context, ExportType, Number, Step, errors::LatexError, eval, export_history, parse, svg_from_latex};
+use math_utils_lib::{Context, Number, Step, eval, parse};
+
+#[cfg(feature = "export")]
+use math_utils_lib::{ExportType, export_history};
 
 use base64::prelude::*;
 
@@ -8,7 +11,46 @@ use resvg::{render, tiny_skia::Pixmap, usvg::{Options, Transform, Tree}};
 
 const BASE_SVG_HEIGHT: f32 = 10.;
 
-pub fn png_from_latex<S: Into<String>>(latex: String, line_color: S, height: i32) -> Result<(Vec<u8>, u32), LatexError> {
+#[derive(Debug, PartialEq, Clone)]
+pub enum LocalLatexError {
+    LatexToPdfError(String),
+    LatexToImageError(String),
+    LatexToSvgError(String)
+}
+
+impl LocalLatexError {
+    pub fn get_reason(&self) -> String {
+        match self {
+            LocalLatexError::LatexToPdfError(s) => return format!("Could not convert Latex to PDF: {}!", s),
+            LocalLatexError::LatexToImageError(s) => return format!("Could not convert Latex to Image: {}!", s),
+            LocalLatexError::LatexToSvgError(s) => return format!("Could not convert Latex to SVG: {}!", s)
+        }
+    }
+}
+
+impl From<mathjax_svg::Error> for LocalLatexError {
+    fn from(value: mathjax_svg::Error) -> Self {
+        LocalLatexError::LatexToSvgError(value.to_string())
+    }
+}
+
+impl From<resvg::usvg::Error> for LocalLatexError {
+    fn from(value: resvg::usvg::Error) -> Self {
+        LocalLatexError::LatexToImageError(value.to_string())
+    }
+}
+
+pub fn svg_from_latex<S: Into<String>>(latex: String, line_color: S) -> Result<String, LocalLatexError> {
+    use mathjax_svg::convert_to_svg;
+
+    let mut svg = convert_to_svg(latex)?;
+
+    svg = svg.replace("currentColor", &line_color.into());
+    
+    Ok(svg)
+}
+
+pub fn png_from_latex<S: Into<String>>(latex: String, line_color: S, height: i32) -> Result<(Vec<u8>, u32), LocalLatexError> {
     let svg = svg_from_latex(latex, line_color)?;
 
     let tree = Tree::from_str(&svg, &Options::default())?;
@@ -87,6 +129,7 @@ pub fn handle_message<N: Number>(msg: String, global_state: &mut State<N>, cell_
     if msg.len() == 4 && msg[0..=3].to_string().to_uppercase() == "HELP" {
         return Ok(Action::Tutorial);
     }
+    #[cfg(feature = "export")]
     if msg.split(" ").nth(0).unwrap().len() == 6 && msg[0..=5].to_string().to_uppercase() == "EXPORT" {
         match msg.to_lowercase().as_str() {
             "export" | "export --pdf" => {

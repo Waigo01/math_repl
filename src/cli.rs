@@ -1,10 +1,14 @@
-use math_utils_lib::{Context, ExportType, Number, Step, eval, export_history, parse};
+use math_utils_lib::{Context, Number, Step, eval, parse};
+
+#[cfg(feature = "export")]
+use math_utils_lib::{ExportType, export_history};
 
 pub fn handle_expressions<N: Number>(expressions: Vec<String>) {
     let mut context: Context<N> = Context::default();
     let mut history = vec![];
 
     for expression in expressions {
+        #[cfg(feature = "export")]
         if expression.to_uppercase() == "EXPORT" || expression.to_uppercase() == "EXPORT --PDF" {
             let pdf = export_history(history.clone(), ExportType::Pdf);
 
@@ -20,6 +24,7 @@ pub fn handle_expressions<N: Number>(expressions: Vec<String>) {
 
             continue;
         }
+        #[cfg(feature = "export")]
         if expression.to_uppercase() == "EXPORT --TEX" {
             let pdf = export_history(history.clone(), ExportType::Tex);
 
@@ -35,6 +40,7 @@ pub fn handle_expressions<N: Number>(expressions: Vec<String>) {
 
             continue;
         }
+        #[cfg(feature = "export")]
         if expression.to_uppercase() == "EXPORT --PNG" {
             let pdf = export_history(history.clone(), ExportType::Png);
 

@@ -3,6 +3,8 @@ use std::{error::Error, io::Write, time::Duration};
 use console::{style, Key, Term};
 use math_utils_lib::{Context, MathLibError, Number, Step};
 
+use crate::message_handler::LocalLatexError;
+
 pub enum Exec {
     Exit,
     Clear
@@ -35,7 +37,17 @@ impl<E: Into<MathLibError>> From<E> for HandlerError {
     }
 }
 
-const REPL_EXAMPLES: [(&'static str, &'static str); 14] = [("You can do the most basic of calculations: ", "3*3"), ("You can also create variables: ", "a=3"), ("And then do calculations with those variables: ", "3a"), ("You can also save matrices to variables: ", "M = [[3, 4, 5], [1, 2, 3], [5, 6, 7]]"), ("And do some calculations with them: ", "3*M"), ("Vectors are also supported: ", "B = [2, 3, 4]"), ("As is linear algebra: ", "M*B"), ("You can even create custom functions with one or multiple variables as inputs: ", "f(x) = 5x^2+2x+x"), ("There is also support for lists of values. This will evaluate the function f at both 5 and 10: ", "f({5, 10})"), ("There is even an equation solver. The inputs can be read as 'solve equation x^2=9 in terms of x': ", "eq(x^2=9, x)"), ("This equation solver can also solve systems of equations: ", "eq(2x+5y+2z=-38, 3x-2y+4z=17, -6x+y-7z=-12, x, y, z)"), ("You can also do some boolean operations: ", "3==3 & 2<4"), ("Then you can create functions with case distinctions: ", "relu(x) = if(x < 0, 0, x)"), ("And lastly you can export the steps to a pdf: ", "export")];
+impl From<LocalLatexError> for HandlerError {
+    fn from(value: LocalLatexError) -> Self {
+        HandlerError { message: value.get_reason() }
+    }
+}
+
+#[cfg(feature = "export")]
+const REPL_EXAMPLES: [(&'static str, &'static str); 17] = [("You can do the most basic of calculations: ", "3*3"), ("You can also create variables: ", "a=3"), ("And then do calculations with those variables: ", "3a"), ("You can also save matrices to variables: ", "M = [[3, 4, 5], [1, 2, 3], [5, 6, 7]]"), ("And do some calculations with them: ", "3*M"), ("Vectors are also supported: ", "B = [2, 3, 4]"), ("As is linear algebra: ", "M*B"), ("You can even create custom functions with one or multiple variables as inputs: ", "f(x) = 5x^2+2x+x"), ("There is also support for lists of values. This will evaluate the function f at both 5 and 10: ", "f({5, 10})"), ("There is even an equation solver. The inputs can be read as 'solve equation x^2=9 in terms of x': ", "eq(x^2=9, x)"), ("This equation solver can also solve systems of equations: ", "eq(2x+5y+2z=-38, 3x-2y+4z=17, -6x+y-7z=-12, x, y, z)"), ("You can also do some boolean operations: ", "3==3 & 2<4"), ("Then you can create functions with case distinctions: ", "relu(x) = if(x < 0, 0, x)"), ("And you can export the steps to a pdf: ", "export"), ("There are also several internal commands, such as vars to display variables: ", "vars"), ("You can also clear all variables: ", "clearvars"), ("You can also clear the repl: ", "clear")];
+
+#[cfg(not(feature = "export"))]
+const REPL_EXAMPLES: [(&'static str, &'static str); 16] = [("You can do the most basic of calculations: ", "3*3"), ("You can also create variables: ", "a=3"), ("And then do calculations with those variables: ", "3a"), ("You can also save matrices to variables: ", "M = [[3, 4, 5], [1, 2, 3], [5, 6, 7]]"), ("And do some calculations with them: ", "3*M"), ("Vectors are also supported: ", "B = [2, 3, 4]"), ("As is linear algebra: ", "M*B"), ("You can even create custom functions with one or multiple variables as inputs: ", "f(x) = 5x^2+2x+x"), ("There is also support for lists of values. This will evaluate the function f at both 5 and 10: ", "f({5, 10})"), ("There is even an equation solver. The inputs can be read as 'solve equation x^2=9 in terms of x': ", "eq(x^2=9, x)"), ("This equation solver can also solve systems of equations: ", "eq(2x+5y+2z=-38, 3x-2y+4z=17, -6x+y-7z=-12, x, y, z)"), ("You can also do some boolean operations: ", "3==3 & 2<4"), ("Then you can create functions with case distinctions: ", "relu(x) = if(x < 0, 0, x)"), ("There are also several internal commands, such as vars to display variables: ", "vars"), ("You can also clear all variables: ", "clearvars"), ("You can also clear the repl: ", "clear")];
 
 pub struct Repl<N: Number, F: FnMut(String, &mut State<N>, i32, bool, String) -> Result<Action, HandlerError>> {
     term: Term,
@@ -123,7 +135,7 @@ impl<N: Number, F: FnMut(String, &mut State<N>, i32, bool, String) -> Result<Act
         loop {
             let mut input_buffer = String::new();
             if let Some(example_step) = tutorial && example_step < REPL_EXAMPLES.len() {
-                self.term.write("  ".as_bytes())?;
+                self.term.write(self.output_prefix.as_bytes())?;
                 self.term.flush()?;
                 self.write_char_by_char(REPL_EXAMPLES[example_step].0)?;
                 self.term.write_line("")?;

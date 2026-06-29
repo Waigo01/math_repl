@@ -13,6 +13,8 @@ categories = ["mathematics", "command-line-utilities"]
 
 [features]
 doc-images = []
+export = ["math_utils_lib/output"]
+multithreading = ["math_utils_lib/parallelism"]
 
 [package.metadata.docs.rs]
 # docs.rs uses a nightly compiler, so by instructing it to use our `doc-images` feature we
@@ -23,7 +25,7 @@ features = ["doc-images"]
 base64 = "0.22.1"
 console = "0.16.3"
 embed-doc-image = "0.1.4"
-math_utils_lib = { git = "https://github.com/Waigo01/math_utils_lib.git", branch = "dev", features=["output"]}
+math_utils_lib = { git = "https://github.com/Waigo01/math_utils_lib.git", branch = "dev"}
 resvg = { version = "0.43.0" }
-mathjax_svg = { version = "3.1.2", optional = true }
+mathjax_svg = { version = "3.1.2" }
 clap = { version = "4.6.1", features = ["derive"] }

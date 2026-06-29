@@ -6,6 +6,10 @@ math_repl is a REPL/CLI that allows a user to quickly calculate expressions, wor
 
 The REPL uses the [kitty image protocol](https://sw.kovidgoyal.net/kitty/graphics-protocol/) when available to render outputs in a nice latex-like manner. If the protocol is not available in your terminal, the REPL will use a much worse looking and less readable string output.
 
+When you select the "export" feature when installing you can export the repl history to latex, pdf or a png. The dependencies used to do this are however very sensitive and might cause build problems.
+
+When you select the "multithreading" feature when installing the equation solver uses multithreading to greatly speed up equation solving.
+
 :warning: math_repl is built on top of [math_utils_lib](https://crates.io/crates/math_utils_lib), which has not yet reached 1.0.0. Expect breaking changes and bugs.
 
 ## Showcase
@@ -18,6 +22,12 @@ You can install math_repl from crates.io.
 
 ```
 cargo install math_repl
+```
+
+If you want to enable the export feature set:
+
+```
+cargo install math_repl -F export
 ```
 
 Make sure that your .cargo/bin is on PATH.
