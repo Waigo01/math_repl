@@ -15,7 +15,7 @@ struct Args {
     /// Expression(s) to evaluate directly without opening a repl
     #[arg(short, long, required=false)]
     eval: Option<Vec<String>>,
-    /// Whether to use complex numbers
+    /// Use complex numbers
     #[arg(short, long, required=false)]
     complex: bool
 }

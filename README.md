@@ -23,7 +23,7 @@ cargo install math_repl
 Make sure that your .cargo/bin is on PATH.
 
 ## Usage
-Here is some usage information from the help command:
+Here is some usage information from the --help flag:
 
 ```
 Simple REPL/CLI for all different kinds of math.
@@ -32,7 +32,7 @@ Usage: math_repl [OPTIONS]
 
 Options:
   -e, --eval <EVAL>  Expression(s) to evaluate directly without opening a repl
-  -c, --complex      Whether to use complex numbers
+  -c, --complex      Use complex numbers
   -h, --help         Print help
   -V, --version      Print version
 ```
