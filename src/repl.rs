@@ -53,17 +53,19 @@ pub struct Repl<N: Number, F: FnMut(String, &mut State<N>, i32, bool, String) ->
     term: Term,
     input_prefix: String,
     output_prefix: String,
+    try_kitty: bool,
     pub message_handler: F,
     pub global_state: State<N>
 }
 
 impl<N: Number, F: FnMut(String, &mut State<N>, i32, bool, String) -> Result<Action, HandlerError>> Repl<N, F> {
     /// used to initialize a new [Repl].
-    pub fn new(input_prefix: String, output_prefix: String, initial_state: State<N>, handler: F) -> Repl<N, F> {
+    pub fn new(input_prefix: String, output_prefix: String, initial_state: State<N>, handler: F, try_kitty: bool) -> Repl<N, F> {
         Repl {
             term: Term::stdout(),
             input_prefix,
             output_prefix,
+            try_kitty,
             message_handler: handler,
             global_state: initial_state
         }
@@ -104,7 +106,7 @@ impl<N: Number, F: FnMut(String, &mut State<N>, i32, bool, String) -> Result<Act
         let use_kitty;
         let mut fg_color = "#FFFFFF".to_string();
 
-        let escape_return = if !features.is_msys_tty() && features.family() == TermFamily::UnixTerm {
+        let escape_return = if !features.is_msys_tty() && features.family() == TermFamily::UnixTerm && self.try_kitty {
             self.read_escape_code("\x1b_Gi=31,s=1,v=1,a=q,t=d,f=24;AAAA\x1b\\\x1b[c")?
         } else {
             String::new()

@@ -17,7 +17,10 @@ struct Args {
     eval: Option<Vec<String>>,
     /// Use complex numbers
     #[arg(short, long, required=false)]
-    complex: bool
+    complex: bool,
+    /// Disable kitty image protocol support
+    #[arg(short, long, required=false)]
+    string_only: bool
 }
 
 pub fn main() {
@@ -32,12 +35,12 @@ pub fn main() {
     } else {
         if args.complex {
             let initial_state: State<Complex<f64>> = State::new(Context::default());
-            let mut repl = Repl::new("→ ".to_string(), "  ".to_string(), initial_state, handle_message);
+            let mut repl = Repl::new("→ ".to_string(), "  ".to_string(), initial_state, handle_message, !args.string_only);
 
             let _ = repl.run_repl();
         } else {
             let initial_state: State<f64> = State::new(Context::default());
-            let mut repl = Repl::new("→ ".to_string(), "  ".to_string(), initial_state, handle_message);
+            let mut repl = Repl::new("→ ".to_string(), "  ".to_string(), initial_state, handle_message, !args.string_only);
 
             let _ = repl.run_repl();
         }

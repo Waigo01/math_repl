@@ -43,6 +43,7 @@ Usage: math_repl [OPTIONS]
 Options:
   -e, --eval <EVAL>  Expression(s) to evaluate directly without opening a repl
   -c, --complex      Use complex numbers
+  -s, --string-only  Disable kitty image protocol support
   -h, --help         Print help
   -V, --version      Print version
 ```
