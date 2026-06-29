@@ -2,7 +2,9 @@
 
 [![crates.io](https://img.shields.io/badge/crates.io-orange?style=for-the-badge&logo=rust)](https://crates.io/crates/math_repl)
 
-math_repl is a REPL/CLI that allows a user to quickly calculate expressions, work with variables as well as various other useful math tools such as integration, an equation solver, etc. Math_repl does not only support real/complex numbers but also vectors and matrices. The REPL uses the [kitty image protocol](https://sw.kovidgoyal.net/kitty/graphics-protocol/) when available to render outputs in a nice latex-like manner. If the protocol is not available in your terminal, the REPL will use a much worse looking and less readable simple string output.
+math_repl is a REPL/CLI that allows a user to quickly calculate expressions, work with variables as well as various other useful math tools such as integration, an equation solver, etc. Math_repl does not only support real/complex numbers but also vectors and matrices.
+
+The REPL uses the [kitty image protocol](https://sw.kovidgoyal.net/kitty/graphics-protocol/) when available to render outputs in a nice latex-like manner. If the protocol is not available in your terminal, the REPL will use a much worse looking and less readable string output.
 
 :warning: math_repl is built on top of [math_utils_lib](https://crates.io/crates/math_utils_lib), which has not yet reached 1.0.0. Expect breaking changes and bugs.
 
@@ -18,7 +20,7 @@ You can install math_repl from crates.io.
 cargo install math_repl
 ```
 
-Make sure that ~/.cargo/bin is on PATH.
+Make sure that your .cargo/bin is on PATH.
 
 ## Usage
 Here is some usage information from the help command:

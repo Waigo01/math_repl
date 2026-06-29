@@ -92,12 +92,15 @@ pub fn handle_message<N: Number>(msg: String, global_state: &mut State<N>, cell_
             "export" | "export --pdf" => {
                 let pdf = export_history(global_state.history.clone(), ExportType::Pdf);
 
-                if let Ok(binary) = pdf {
-                    if let Ok(_) = std::fs::write("export.pdf", binary) {} else {
+                match pdf {
+                    Ok(binary) => {
+                        if let Ok(_) = std::fs::write("export.pdf", binary) {} else {
+                            return Err(HandlerError { message: "Error exporting pdf!".to_string() });
+                        }
+                    },
+                    Err(_) => {
                         return Err(HandlerError { message: "Error exporting pdf!".to_string() });
                     }
-                } else {
-                    return Err(HandlerError { message: "Error exporting pdf!".to_string() });
                 }
 
                 return Ok(Action::Print("Exported to export.pdf!".to_string()));
