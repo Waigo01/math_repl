@@ -1,6 +1,5 @@
 use math_utils_lib::{Context, Number, Step, eval, parse};
 
-#[cfg(feature = "export")]
 use math_utils_lib::{ExportType, export_history};
 
 use base64::prelude::*;
@@ -129,9 +128,9 @@ pub fn handle_message<N: Number>(msg: String, global_state: &mut State<N>, cell_
     if msg.len() == 4 && msg[0..=3].to_string().to_uppercase() == "HELP" {
         return Ok(Action::Tutorial);
     }
-    #[cfg(feature = "export")]
     if msg.split(" ").nth(0).unwrap().len() == 6 && msg[0..=5].to_string().to_uppercase() == "EXPORT" {
         match msg.to_lowercase().as_str() {
+            #[cfg(feature = "export")]
             "export" | "export --pdf" => {
                 let pdf = export_history(global_state.history.clone(), ExportType::Pdf);
 
@@ -148,6 +147,21 @@ pub fn handle_message<N: Number>(msg: String, global_state: &mut State<N>, cell_
 
                 return Ok(Action::Print("Exported to export.pdf!".to_string()));
             },
+            #[cfg(not(feature = "export"))]
+            "export" | "export --tex" => {
+                let tex = export_history(global_state.history.clone(), ExportType::Tex);
+
+                if let Ok(binary) = tex {
+                    if let Ok(_) = std::fs::write("export.tex", binary) {} else {
+                        return Err(HandlerError { message: "Error exporting tex!".to_string() });
+                    }
+                } else {
+                    return Err(HandlerError { message: "Error exporting tex!".to_string() });
+                }
+
+                return Ok(Action::Print("Exported to export.tex!".to_string()));
+            },
+            #[cfg(feature = "export")]
             "export --tex" => {
                 let tex = export_history(global_state.history.clone(), ExportType::Tex);
 
@@ -161,6 +175,7 @@ pub fn handle_message<N: Number>(msg: String, global_state: &mut State<N>, cell_
 
                 return Ok(Action::Print("Exported to export.tex!".to_string()));
             },
+            #[cfg(feature = "export")]
             "export --png" => {
                 let png = export_history(global_state.history.clone(), ExportType::Png);
 

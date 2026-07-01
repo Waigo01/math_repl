@@ -6,7 +6,9 @@ math_repl is a REPL/CLI that allows a user to quickly calculate expressions, wor
 
 The REPL uses the [kitty image protocol](https://sw.kovidgoyal.net/kitty/graphics-protocol/) when available to render outputs in a nice latex-like manner. If the protocol is not available in your terminal, the REPL will use a much worse looking and less readable string output.
 
-When you select the "export" feature when installing you can export the repl history to latex, pdf or a png. The dependencies used to do this are however very sensitive and might cause build problems.
+Without any features enabled you can export the REPL history to a latex document.
+
+When you select the "export" feature when installing you can also export the repl history directly to a pdf or a png. The dependencies used to do this are however very sensitive and might cause build problems on different systems.
 
 When you select the "multithreading" feature when installing the equation solver uses multithreading to greatly speed up equation solving.
 
