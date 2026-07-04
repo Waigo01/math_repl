@@ -33,7 +33,7 @@ pub struct HandlerError {
 
 impl<E: Into<MathLibError>> From<E> for HandlerError {
     fn from(value: E) -> Self {
-        HandlerError { message: value.into().get_reason() }
+        HandlerError { message: value.into().to_string() }
     }
 }
 
@@ -49,7 +49,7 @@ const REPL_EXAMPLES: [(&'static str, &'static str); 17] = [("You can do the most
 #[cfg(not(feature = "export"))]
 const REPL_EXAMPLES: [(&'static str, &'static str); 17] = [("You can do the most basic of calculations: ", "3*3"), ("You can also create variables: ", "a=3"), ("And then do calculations with those variables: ", "3a"), ("You can also save matrices to variables: ", "M = [[3, 4, 5], [1, 2, 3], [5, 6, 7]]"), ("And do some calculations with them: ", "3*M"), ("Vectors are also supported: ", "B = [2, 3, 4]"), ("As is linear algebra: ", "M*B"), ("You can even create custom functions with one or multiple variables as inputs: ", "f(x) = 5x^2+2x+x"), ("There is also support for lists of values. This will evaluate the function f at both 5 and 10: ", "f({5, 10})"), ("There is even an equation solver. The inputs can be read as 'solve equation x^2=9 in terms of x': ", "eq(x^2=9, x)"), ("This equation solver can also solve systems of equations: ", "eq(2x+5y+2z=-38, 3x-2y+4z=17, -6x+y-7z=-12, x, y, z)"), ("You can also do some boolean operations: ", "3==3 & 2<4"), ("Then you can create functions with case distinctions: ", "relu(x) = if(x < 0, 0, x)"), ("And you can export the steps to latex: ", "export"), ("There are also several internal commands, such as vars to display variables and functions: ", "vars"), ("You can also clear all variables: ", "clearvars"), ("You can also clear the repl: ", "clear")];
 
-pub struct Repl<N: Number, F: FnMut(String, &mut State<N>, i32, bool, String) -> Result<Action, HandlerError>> {
+pub struct Repl<N: Number, F: AsyncFnMut(String, &mut State<N>, i32, bool, String) -> Result<Action, HandlerError>> {
     term: Term,
     input_prefix: String,
     output_prefix: String,
@@ -58,7 +58,7 @@ pub struct Repl<N: Number, F: FnMut(String, &mut State<N>, i32, bool, String) ->
     pub global_state: State<N>
 }
 
-impl<N: Number, F: FnMut(String, &mut State<N>, i32, bool, String) -> Result<Action, HandlerError>> Repl<N, F> {
+impl<N: Number, F: AsyncFnMut(String, &mut State<N>, i32, bool, String) -> Result<Action, HandlerError>> Repl<N, F> {
     /// used to initialize a new [Repl].
     pub fn new(input_prefix: String, output_prefix: String, initial_state: State<N>, handler: F, try_kitty: bool) -> Repl<N, F> {
         Repl {
@@ -96,7 +96,7 @@ impl<N: Number, F: FnMut(String, &mut State<N>, i32, bool, String) -> Result<Act
         Ok(())
     }
 
-    pub fn run_repl(&mut self) -> Result<(), Box<dyn Error>> {
+    pub async fn run_repl(&mut self) -> Result<(), Box<dyn Error>> {
         self.term.set_title("math_repl");
         
         let mut history: Vec<String> = vec![];
@@ -253,46 +253,52 @@ impl<N: Number, F: FnMut(String, &mut State<N>, i32, bool, String) -> Result<Act
             }
             history = history.into_iter().filter(|x| x != &input_buffer).collect();
             history.insert(0, input_buffer.clone());
-            let output = (self.message_handler)(input_buffer, &mut self.global_state, cell_height, use_kitty, fg_color.clone());
-            match output {
-                Ok(s) => {
-                    match s {
-                        Action::Print(m) => {
-                            let output_line_split = m.split("\n").map(|x| x.to_string()).collect::<Vec<String>>();
-                            for i in output_line_split {
-                                self.term.write_line(&format!("{}{}", self.output_prefix, i))?;
-                            }
-                        },
-                        Action::Exec(e) => {
-                            match e {
-                                Exec::Exit => {
-                                    if use_kitty {
-                                        self.term.write_line("\x1b_Ga=d\x1b\\")?;
-                                    }
-                                    self.term.clear_screen()?;
-                                    return Ok(());
-                                },
-                                Exec::Clear => {
-                                    if use_kitty {
-                                        self.term.write_line("\x1b_Ga=d\x1b\\")?;
-                                    }
-                                    self.term.clear_screen()?;
+            if let Ok(output) = tokio::time::timeout(Duration::from_secs(1), (self.message_handler)(input_buffer, &mut self.global_state, cell_height, use_kitty, fg_color.clone())).await {
+                match output {
+                    Ok(s) => {
+                        match s {
+                            Action::Print(m) => {
+                                let output_line_split = m.split("\n").map(|x| x.to_string()).collect::<Vec<String>>();
+                                for i in output_line_split {
+                                    self.term.write_line(&format!("{}{}", self.output_prefix, i))?;
                                 }
+                            },
+                            Action::Exec(e) => {
+                                match e {
+                                    Exec::Exit => {
+                                        if use_kitty {
+                                            self.term.write_line("\x1b_Ga=d\x1b\\")?;
+                                        }
+                                        self.term.clear_screen()?;
+                                        return Ok(());
+                                    },
+                                    Exec::Clear => {
+                                        if use_kitty {
+                                            self.term.write_line("\x1b_Ga=d\x1b\\")?;
+                                        }
+                                        self.term.clear_screen()?;
+                                    }
+                                }
+                            },
+                            Action::Tutorial => {
+                                tutorial = Some(0);
+                                continue;
                             }
-                        },
-                        Action::Tutorial => {
-                            tutorial = Some(0);
-                            continue;
+                        } 
+                    },
+                    Err(s) => {
+                        let output_line_split = s.message.lines();
+                        for i in output_line_split {
+                            let line = i.to_string();
+                            let first = i.chars().nth(0).unwrap_or(' ').to_uppercase();
+                            self.term.write_line(&format!("{}{}{}{}", self.output_prefix, style(first).red().bold(), style(line[1..].to_string()).red().bold(), style("!").red().bold()))?;
                         }
-                    } 
-                },
-                Err(s) => {  
-                    let output_line_split = s.message.split("\n").map(|x| x.to_string()).collect::<Vec<String>>();
-                    for i in output_line_split {
-                        self.term.write_line(&format!("{}{}", self.output_prefix, style(i).red().bold()))?;
                     }
                 }
+            } else {
+                self.term.write_line(&format!("{}{}", self.output_prefix, style("Timeout occured!").red().bold()))?;
             }
+            
             if let Some(example_step) = tutorial.as_mut() {
                 *example_step += 1;
             }

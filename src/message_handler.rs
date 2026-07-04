@@ -1,4 +1,4 @@
-use math_utils_lib::{Context, Number, Step, eval, parse};
+use math_utils_lib::{Context, Number, Step, eval_async, parse_async};
 
 use math_utils_lib::{ExportType, export_history};
 
@@ -87,16 +87,16 @@ pub fn print_latex_kitty(latex: String, color: String, cell_height: i32) -> Resu
     return Ok(format!("{command}{}", (0..n_newlines).map(|_| "\n".to_string()).collect::<Vec<String>>().join("")));
 }
 
-pub fn handle_message<N: Number>(msg: String, global_state: &mut State<N>, cell_height: i32, use_kitty: bool, foreground: String) -> Result<Action, HandlerError> {
+pub async fn handle_message<N: Number>(msg: String, global_state: &mut State<N>, cell_height: i32, use_kitty: bool, foreground: String) -> Result<Action, HandlerError> {
     if msg.len() == 4 && msg[0..=3].to_string().to_uppercase() == "VARS" {
         if use_kitty {
             let latex_vars: String = "\\begin{align}".to_string() + &global_state.context.vars.iter()
-                .map(|v| v.as_latex(true))
+                .map(|v| v.to_latex(true))
                 .collect::<Vec<String>>()
                 .join(" \\\\") + " \\\\";
 
             let latex_funs: String = global_state.context.funs.iter()
-                .map(|f| f.as_latex(true))
+                .map(|f| f.to_latex(true))
                 .collect::<Vec<String>>()
                 .join(" \\\\") + "\\end{align}";
 
@@ -105,12 +105,12 @@ pub fn handle_message<N: Number>(msg: String, global_state: &mut State<N>, cell_
             return Ok(Action::Print(output))
         } else {
             let string_vars: String = global_state.context.vars.iter()
-                .map(|v| v.as_string())
+                .map(|v| v.to_string())
                 .collect::<Vec<String>>()
                 .join("\n");
 
             let string_funs: String = global_state.context.funs.iter()
-                .map(|f| f.as_string())
+                .map(|f| f.to_string())
                 .collect::<Vec<String>>()
                 .join("\n");
 
@@ -197,12 +197,12 @@ pub fn handle_message<N: Number>(msg: String, global_state: &mut State<N>, cell_
 
         if use_kitty {
             let latex_vars: String = "\\begin{align}".to_string() + &global_state.context.vars.iter()
-                .map(|v| v.as_latex(true))
+                .map(|v| v.to_latex(true))
                 .collect::<Vec<String>>()
                 .join(" \\\\") + " \\\\";
 
             let latex_funs: String = global_state.context.funs.iter()
-                .map(|f| f.as_latex(true))
+                .map(|f| f.to_latex(true))
                 .collect::<Vec<String>>()
                 .join(" \\\\") + "\\end{align}";
 
@@ -211,12 +211,12 @@ pub fn handle_message<N: Number>(msg: String, global_state: &mut State<N>, cell_
             return Ok(Action::Print(output))
         } else {
             let string_vars: String = global_state.context.vars.iter()
-                .map(|v| v.as_string())
+                .map(|v| v.to_string())
                 .collect::<Vec<String>>()
                 .join("\n");
 
             let string_funs: String = global_state.context.funs.iter()
-                .map(|f| f.as_string())
+                .map(|f| f.to_string())
                 .collect::<Vec<String>>()
                 .join("\n");
 
@@ -226,14 +226,14 @@ pub fn handle_message<N: Number>(msg: String, global_state: &mut State<N>, cell_
 
     let expression: String = msg.trim().split(" ").filter(|s| !s.is_empty()).collect();
     
-    let parsed_expr = parse(expression)?;
+    let parsed_expr = parse_async(expression).await?;
 
-    let res = eval(&parsed_expr, &mut global_state.context)?;
+    let res = eval_async(&parsed_expr, &mut global_state.context).await?;
 
     let step = Step::new(parsed_expr, res);
     
-    let latex = step.as_latex_inline();
-    let pure_string = step.as_string();
+    let latex = step.to_latex_inline();
+    let pure_string = step.to_string();
 
     global_state.history.push(step);
     

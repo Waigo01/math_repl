@@ -23,7 +23,8 @@ struct Args {
     string_only: bool
 }
 
-pub fn main() {
+#[tokio::main]
+pub async fn main() {
     let args = Args::parse();
 
     if let Some(expressions) = args.eval && expressions.len() != 0 {
@@ -37,12 +38,12 @@ pub fn main() {
             let initial_state: State<Complex<f64>> = State::new(Context::default());
             let mut repl = Repl::new("→ ".to_string(), "  ".to_string(), initial_state, handle_message, !args.string_only);
 
-            let _ = repl.run_repl();
+            let _ = repl.run_repl().await;
         } else {
             let initial_state: State<f64> = State::new(Context::default());
             let mut repl = Repl::new("→ ".to_string(), "  ".to_string(), initial_state, handle_message, !args.string_only);
 
-            let _ = repl.run_repl();
+            let _ = repl.run_repl().await;
         }
     }
 }
