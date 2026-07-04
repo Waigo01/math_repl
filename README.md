@@ -10,8 +10,6 @@ Without any features enabled you can export the REPL history to a latex document
 
 When you select the "export" feature when installing you can also export the repl history directly to a pdf or a png. The dependencies used to do this are however very sensitive and might cause build problems on different systems.
 
-When you select the "multithreading" feature when installing the equation solver uses multithreading to greatly speed up equation solving.
-
 :warning: math_repl is built on top of [math_utils_lib](https://crates.io/crates/math_utils_lib), which has not yet reached 1.0.0. Expect breaking changes and bugs.
 
 ## Showcase

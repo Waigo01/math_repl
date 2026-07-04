@@ -14,7 +14,6 @@ categories = ["mathematics", "command-line-utilities"]
 [features]
 doc-images = []
 export = ["math_utils_lib/output"]
-multithreading = ["math_utils_lib/multithreading"]
 
 [package.metadata.docs.rs]
 # docs.rs uses a nightly compiler, so by instructing it to use our `doc-images` feature we
