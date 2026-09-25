@@ -189,7 +189,7 @@ pub async fn handle_message<N: Number>(msg: String, global_state: &mut State<N>,
 
                 return Ok(Action::Print("Exported to export.png!".to_string()));
             },
-            _ => {return Ok(Action::Print("Please use export/export --tex, export --png or export --pdf!".to_string()))}
+            _ => {return Ok(Action::Print("Please use export/export --tex, export --png or export --pdf and make sure that the export feature is enabled if you want to export to pdf or png!".to_string()))}
         }
     }
     if msg.len() == 9 && msg[0..=8].to_string().to_uppercase() == "CLEARVARS" {

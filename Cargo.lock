@@ -145,16 +145,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "async_macro"
-version = "0.1.0"
-source = "git+https://github.com/Waigo01/math_utils_lib.git?branch=dev#c7e3356307735f4f774f9dc9552c45a8b437f7a7"
-dependencies = [
- "proc-macro2",
- "quote",
- "syn 2.0.118",
-]
-
-[[package]]
 name = "atomic-take"
 version = "1.1.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -2048,13 +2038,13 @@ dependencies = [
 [[package]]
 name = "math_utils_lib"
 version = "0.5.0"
-source = "git+https://github.com/Waigo01/math_utils_lib.git?branch=dev#c7e3356307735f4f774f9dc9552c45a8b437f7a7"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "8415ace5d5c674026677b74339ac9428404aa3329b57e90cf50e173ab311119e"
 dependencies = [
- "async_macro",
  "mathjax_svg",
+ "mul_async_macro",
  "resvg",
  "tectonic",
- "tokio",
 ]
 
 [[package]]
@@ -2147,6 +2137,17 @@ dependencies = [
  "log",
  "wasi",
  "windows-sys 0.61.2",
+]
+
+[[package]]
+name = "mul_async_macro"
+version = "0.1.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "8e88d4ed66f3521442e1aa2cca8c9b22f0f2526ffed5b84535520c3948580f0f"
+dependencies = [
+ "proc-macro2",
+ "quote",
+ "syn 2.0.118",
 ]
 
 [[package]]
